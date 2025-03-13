@@ -2,61 +2,99 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Expenses Tracker</title>
+    <title>{% block title %}Expenses Tracker{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'main_app/css/style.css' %}">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <div class="container">
-        <div id="login-form" class="form-container active">
-            <h2>Login to Expenses Tracker</h2>
-            <form action="/login/" method="post">
-                {% csrf_token %}
-                <div class="form-group">
-                    <label for="username">Username</label>
-                    <input type="text" id="username" name="username" required>
+    <header>
+        <nav class="navbar">
+            <div class="nav-brand">Expenses Tracker</div>
+            <ul class="nav-menu">
+                <li><a href="{% url 'index' %}">Dashboard</a></li>
+                <li><a href="#">Expenses</a></li>
+                <li><a href="#">Categories</a></li>
+                <li><a href="#">Reports</a></li>
+                <li class="user-menu">
+                    {% if user.is_authenticated %}
+                        <a href="#">{{ user.username }}</a>
+                        <div class="dropdown-menu">
+                            <a href="#">Profile</a>
+                            <a href="#">Settings</a>
+                            <a href="#">Logout</a>
+                        </div>
+                    {% else %}
+                        <a href="#" onclick="showLoginForm()">Login</a>
+                    {% endif %}
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        {% if not user.is_authenticated %}
+            <div id="auth-container" class="container">
+                <div id="login-form" class="form-container active">
+                    <h2>Login to Expenses Tracker</h2>
+                    <form action="/login/" method="post">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="username">Username</label>
+                            <input type="text" id="username" name="username" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <input type="password" id="password" name="password" required>
+                        </div>
+                        <div class="form-group">
+                            <button type="submit" class="btn">Login</button>
+                        </div>
+                    </form>
+                    <div class="form-toggle">
+                        <p>Don't have an account? <a href="#" onclick="toggleForm()">Register now</a></p>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" name="password" required>
+                
+                <div id="register-form" class="form-container">
+                    <h2>Create Account</h2>
+                    <form action="/register/" method="post">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="reg-username">Username</label>
+                            <input type="text" id="reg-username" name="username" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" name="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="reg-password">Password</label>
+                            <input type="password" id="reg-password" name="password" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="confirm-password">Confirm Password</label>
+                            <input type="password" id="confirm-password" name="confirm_password" required>
+                        </div>
+                        <div class="form-group">
+                            <button type="submit" class="btn">Register</button>
+                        </div>
+                    </form>
+                    <div class="form-toggle">
+                        <p>Already have an account? <a href="#" onclick="toggleForm()">Login</a></p>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <button type="submit" class="btn">Login</button>
-                </div>
-            </form>
-            <div class="form-toggle">
-                <p>Don't have an account? <a href="#" onclick="toggleForm()">Register now</a></p>
             </div>
-        </div>
-        
-        <div id="register-form" class="form-container">
-            <h2>Create Account</h2>
-            <form action="/register/" method="post">
-                {% csrf_token %}
-                <div class="form-group">
-                    <label for="reg-username">Username</label>
-                    <input type="text" id="reg-username" name="username" required>
-                </div>
-                <div class="form-group">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" name="email" required>
-                </div>
-                <div class="form-group">
-                    <label for="reg-password">Password</label>
-                    <input type="password" id="reg-password" name="password" required>
-                </div>
-                <div class="form-group">
-                    <label for="confirm-password">Confirm Password</label>
-                    <input type="password" id="confirm-password" name="confirm_password" required>
-                </div>
-                <div class="form-group">
-                    <button type="submit" class="btn">Register</button>
-                </div>
-            </form>
-            <div class="form-toggle">
-                <p>Already have an account? <a href="#" onclick="toggleForm()">Login</a></p>
+        {% else %}
+            <div class="content-container">
+                {% block content %}{% endblock %}
             </div>
-        </div>
-    </div>
+        {% endif %}
+    </main>
+
+    <footer>
+        <p>&copy; {% now "Y" %} Expenses Tracker. All rights reserved.</p>
+    </footer>
 
     <script>
         function toggleForm() {
@@ -71,6 +109,12 @@
                 loginForm.classList.add('active');
             }
         }
+
+        function showLoginForm() {
+            const authContainer = document.getElementById('auth-container');
+            authContainer.style.display = 'block';
+        }
     </script>
+    {% block extra_js %}{% endblock %}
 </body>
 </html>
