@@ -9,8 +9,18 @@ STATUS = ((0, "Draft"), (1, "Added to Budget"))
 class Expense(models.Model):
     name = models.CharField(max_length=100)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
-    date = models.DateField(input_formats='%d/%m/%Y')
-    category = models.CharField(max_length=50)
+    date = models.DateField()
+    category = models.CharField(
+        max_length=50,
+        choices=[
+            ('Food', 'Food'),
+            ('Transport', 'Transport'),
+            ('Rent', 'Rent'),
+            ('Entertainment', 'Entertainment'),
+            ('Health', 'Health'),
+            ('Other', 'Other'),
+        ]
+    )
     author = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='expenses_inputs'
         )

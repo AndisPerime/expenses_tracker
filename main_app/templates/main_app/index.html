@@ -45,9 +45,11 @@
                         <td>{{ expense.date }}</td>
                         <td>{{ expense.description }}</td>
                         <td>
-                            <span class="category-badge" style="background-color: {{ expense.category.color }}">
+                            {% with bg_color=expense.category.color|default:"#dddddd" %}
+                            <span class="category-badge">
                                 {{ expense.category.name }}
                             </span>
+                            {% endwith %}
                         </td>
                         <td>${{ expense.amount }}</td>
                         <td>
