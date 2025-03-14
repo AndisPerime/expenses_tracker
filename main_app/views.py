@@ -6,4 +6,4 @@ from .models import Expense
 
 def home(request):
     expenses = Expense.objects.all()
-    return render(request, 'templates/home.html', {'expenses': expenses})
+    return render(request, 'main_app/index.html', {'expenses': expenses})
