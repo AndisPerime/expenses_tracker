@@ -29,7 +29,7 @@ class Expense(models.Model):
     status = models.IntegerField(choices=STATUS, default=0)
 
     class Meta:
-        ordering = ["-created_on"]
+        ordering = ["-created_at"]
 
         def __str__(self):
-            return f"This {self.title} expense was added by {self.author}"
+            return f"Budget item: {self.name} (${self.amount}) - Added by {self.author}"
