@@ -27,3 +27,9 @@ class Expense(models.Model):
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     status = models.IntegerField(choices=STATUS, default=0)
+
+    class Meta:
+        ordering = ["-created_on"]
+
+        def __str__(self):
+            return f"This {self.title} expense was added by {self.author}"
