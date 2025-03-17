@@ -841,3 +841,66 @@ input[type="date"] {
         align-items: flex-start;
     }
 }
+
+/* Improve transaction type selector styles */
+.transaction-type-selector .radio-group {
+    display: flex;
+    gap: 15px;
+    margin-top: 5px;
+}
+
+.transaction-type-selector label {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    position: relative;
+}
+
+.transaction-type-selector input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+}
+
+.radio-label {
+    padding: 8px 20px;
+    border-radius: 20px;
+    margin-left: 0;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    display: inline-block;
+    width: 80px;
+    text-align: center;
+}
+
+.radio-label.expense {
+    color: #f44336;
+    border: 2px solid #f44336;
+}
+
+.radio-label.income {
+    color: #4CAF50;
+    border: 2px solid #4CAF50;
+}
+
+input[type="radio"]:checked + .radio-label.expense {
+    background-color: #f44336;
+    color: white;
+    box-shadow: 0 2px 4px rgba(244, 67, 54, 0.3);
+}
+
+input[type="radio"]:checked + .radio-label.income {
+    background-color: #4CAF50;
+    color: white;
+    box-shadow: 0 2px 4px rgba(76, 175, 80, 0.3);
+}
+
+/* Enhanced modal content styling */
+.modal-content.expense-modal {
+    background-color: #fff9f9;
+    border-left: 4px solid #f44336;
+}
+
+.modal-content.income-modal {
+    background-color: #f7fff7;
+    border-left: 4px solid #4CAF50;
+}

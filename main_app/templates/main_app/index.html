@@ -150,7 +150,9 @@
                     <select id="expense-category" name="category" required>
                         <option value="">Select a category</option>
                         {% for category in categories %}
-                            <option value="{{ category.id }}">{{ category.name }}</option>
+                            {% if category.name != "Income" %}
+                                <option value="{{ category.id }}">{{ category.name }}</option>
+                            {% endif %}
                         {% endfor %}
                     </select>
                 </div>
@@ -820,29 +822,49 @@
     document.addEventListener('DOMContentLoaded', function() {
         const transactionTypeRadios = document.querySelectorAll('input[name="transaction_type"]');
         const categoryField = document.getElementById('category-field');
+        const categorySelect = document.getElementById('expense-category');
         
         transactionTypeRadios.forEach(radio => {
             radio.addEventListener('change', function() {
-                if (this.value === 'income') {
+                const transactionType = this.value;
+                
+                // Update the form based on transaction type
+                if (transactionType === 'income') {
                     categoryField.style.display = 'none';
+                    categorySelect.removeAttribute('required');
+                    
+                    // Set a default hidden value for income category
+                    if (!document.getElementById('income-category-hidden')) {
+                        const hiddenInput = document.createElement('input');
+                        hiddenInput.type = 'hidden';
+                        hiddenInput.id = 'income-category-hidden';
+                        hiddenInput.name = 'category';
+                        hiddenInput.value = 'income';
+                        categoryField.appendChild(hiddenInput);
+                    }
+                    
+                    // Update modal style
+                    const modalContent = document.querySelector('.modal-content');
+                    modalContent.classList.remove('expense-modal');
+                    modalContent.classList.add('income-modal');
                 } else {
                     categoryField.style.display = 'block';
+                    categorySelect.setAttribute('required', '');
+                    
+                    // Remove hidden input if exists
+                    const hiddenInput = document.getElementById('income-category-hidden');
+                    if (hiddenInput) {
+                        hiddenInput.remove();
+                    }
+                    
+                    // Update modal style
+                    const modalContent = document.querySelector('.modal-content');
+                    modalContent.classList.remove('income-modal');
+                    modalContent.classList.add('expense-modal');
                 }
             });
         });
 
-        // Setup report period change event
-        const reportPeriod = document.getElementById('report-period');
-        const reportCustomDates = document.getElementById('report-custom-dates');
-        
-        reportPeriod.addEventListener('change', function() {
-            if (this.value === 'custom') {
-                reportCustomDates.style.display = 'block';
-            } else {
-                reportCustomDates.style.display = 'none';
-            }
-        });
-        
         // Handle form submission with "Continue Adding" checkbox
         document.getElementById('expense-form').addEventListener('submit', function(e) {
             const form = this;
@@ -895,9 +917,37 @@
                         // Reset form fields but keep it open
                         form.reset();
                         
-                        // Reset form state
-                        document.querySelector('input[name="transaction_type"][value="expense"]').checked = true;
-                        document.getElementById('category-field').style.display = 'block';
+                        // Reset form state - preserve the current transaction type
+                        const currentType = transactionType;
+                        if (currentType === 'income') {
+                            document.querySelector('input[name="transaction_type"][value="income"]').checked = true;
+                            categoryField.style.display = 'none';
+                            categorySelect.removeAttribute('required');
+                            
+                            // Add back the hidden input
+                            if (!document.getElementById('income-category-hidden')) {
+                                const hiddenInput = document.createElement('input');
+                                hiddenInput.type = 'hidden';
+                                hiddenInput.id = 'income-category-hidden';
+                                hiddenInput.name = 'category';
+                                hiddenInput.value = 'income';
+                                categoryField.appendChild(hiddenInput);
+                            }
+                            
+                            // Keep income modal styling
+                            const modalContent = document.querySelector('.modal-content');
+                            modalContent.classList.add('income-modal');
+                            modalContent.classList.remove('expense-modal');
+                        } else {
+                            document.querySelector('input[name="transaction_type"][value="expense"]').checked = true;
+                            categoryField.style.display = 'block';
+                            categorySelect.setAttribute('required', '');
+                            
+                            // Keep expense modal styling
+                            const modalContent = document.querySelector('.modal-content');
+                            modalContent.classList.add('expense-modal');
+                            modalContent.classList.remove('income-modal');
+                        }
                         
                         // Re-check the "Continue adding" checkbox (it was just reset)
                         document.getElementById('continue-adding').checked = true;

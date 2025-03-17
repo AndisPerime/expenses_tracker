@@ -51,6 +51,15 @@ def home(request):
         expenses = transactions.filter(transaction_type='expense')
         income = transactions.filter(transaction_type='income')
         
+        # Make sure Income category exists
+        income_category, _ = Category.objects.get_or_create(
+            name='Income',
+            defaults={'color': '#4CAF50'}  # Green color for income
+        )
+        
+        # Get categories excluding Income category for the dropdown
+        display_categories = Category.objects.exclude(name='Income')
+        
         # Get summary data
         total_expenses = expenses.aggregate(Sum('amount'))['amount__sum'] or 0
         total_income = income.aggregate(Sum('amount'))['amount__sum'] or 0
@@ -77,12 +86,11 @@ def home(request):
             'data': [],
             'colors': []
         }
+        display_categories = Category.objects.none()
         
-    categories = Category.objects.all()
-    
     context = {
         'expenses': transactions,
-        'categories': categories,
+        'categories': display_categories,  # Use filtered categories
         'total_amount': total_expenses,
         'total_income': total_income,
         'total_expenses': total_expenses,
@@ -116,13 +124,15 @@ def add_expense(request):
         else:
             # For expenses, process the category as before
             category_id = request.POST.get('category')
-            # Debugging output
-            print(f"POST data: amount={amount}, description={description}, category_id={category_id}, date={date}, transaction_type={transaction_type}")
             
-            # Don't even try to use a non-numeric category ID
-            if not category_id or not category_id.isdigit():
-                # Just use the "Other" category directly
-                print(f"Invalid category_id: {category_id}, using Other category")
+            # Don't try to use 'income' as a category ID
+            if category_id == 'income':
+                category, _ = Category.objects.get_or_create(
+                    name='Other',
+                    defaults={'color': '#FF5722'}
+                )
+            elif not category_id or not category_id.isdigit():
+                # Fallback to Other category
                 category, _ = Category.objects.get_or_create(
                     name='Other',
                     defaults={'color': '#FF5722'}
@@ -132,14 +142,12 @@ def add_expense(request):
                     # Use a valid numeric ID
                     category_id = int(category_id)
                     category = Category.objects.get(id=category_id)
-                    print(f"Found category: {category.name} (ID: {category.id})")
                 except (ValueError, Category.DoesNotExist):
                     # Fallback to Other category
                     category, _ = Category.objects.get_or_create(
                         name='Other',
                         defaults={'color': '#FF5722'}
                     )
-                    print(f"Fallback to Other category (ID: {category.id})")
         
         # Validate required data
         if not all([amount, description, date]):
