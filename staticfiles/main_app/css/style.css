@@ -203,16 +203,32 @@ main {
     margin-bottom: 20px;
 }
 
+/* Add specific styles for expense table */
 .expense-table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 15px;
+    box-shadow: 0 2px 3px rgba(0,0,0,0.1);
 }
 
 .expense-table th, .expense-table td {
     padding: 12px 15px;
     text-align: left;
     border-bottom: 1px solid #ddd;
+}
+
+.expense-table th {
+    background-color: #f4f4f4;
+    font-weight: 600;
+    color: #333;
+}
+
+.expense-table tr:hover {
+    background-color: #f9f9f9;
+}
+
+.expense-table tr:last-child td {
+    border-bottom: none;
 }
 
 .expense-table thead {
@@ -335,17 +351,24 @@ h1, h2 {
     pointer-events: auto; /* Capture clicks when visible */
 }
 
+/* Fix styling for the modal dialog */
 .modal-content {
-    background-color: rgb(161, 24, 24);
+    background-color: #ffffff;
     border-radius: 8px;
     padding: 25px;
     width: 90%;
     max-width: 500px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-    position: relative;
-    transform: translateY(10px) scale(0.95);
-    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    animation: gentleFloat 6s infinite alternate ease-in-out;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+.modal-content.expense-modal {
+    background-color: #fffafa; /* Very light red tint */
+    border-left: 4px solid #f44336;
+}
+
+.modal-content.income-modal {
+    background-color: #f0fff0; /* Very light green tint */
+    border-left: 4px solid #4CAF50;
 }
 
 .modal.show .modal-content {
@@ -648,4 +671,236 @@ input[type="radio"]:checked + .radio-label.income {
 .transaction-type-badge.income {
     background-color: #4CAF50;
     color: white;
+}
+
+/* Income and expense amount styling */
+.income-amount {
+    color: #4CAF50;
+    font-weight: bold;
+}
+
+.expense-amount {
+    color: #f44336;
+    font-weight: bold;
+}
+
+/* Improve form date input styling */
+input[type="date"] {
+    width: 100%;
+    padding: 8px;
+    box-sizing: border-box;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+/* Toast notification styling */
+.toast {
+    position: fixed;
+    top: 70px;
+    right: 20px;
+    padding: 12px 20px;
+    background-color: #333;
+    color: white;
+    border-radius: 5px;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.toast.success {
+    background-color: #4CAF50;
+}
+
+.toast.error {
+    background-color: #f44336;
+}
+
+.toast.show {
+    opacity: 1;
+}
+
+/* Improved dashboard layout */
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.filter-container {
+    background-color: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0px 2px 5px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+/* Update date range filter styles */
+.date-range-filter {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.date-range-filter label {
+    font-weight: 500;
+    margin-right: 5px;
+}
+
+/* Improved card styles */
+.summary-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.income-card .card-value {
+    color: #4CAF50;
+}
+
+.expense-card .card-value {
+    color: #f44336;
+}
+
+/* Report modal styling */
+.modal-content.report-modal {
+    max-width: 600px;
+    background-color: #f8f9fa;
+    border-left: 4px solid #2196F3;
+}
+
+.date-inputs {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 5px;
+}
+
+/* Toast notification */
+.toast {
+    position: fixed;
+    top: 70px;
+    right: 20px;
+    padding: 12px 20px;
+    border-radius: 4px;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+    color: white;
+    z-index: 1000;
+    opacity: 0;
+    transform: translateX(50px);
+    transition: opacity 0.3s, transform 0.3s;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.toast.success {
+    background-color: #4CAF50;
+}
+
+.toast.error {
+    background-color: #f44336;
+}
+
+.toast.info {
+    background-color: #2196F3;
+}
+
+.toast.warning {
+    background-color: #FF9800;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .summary-cards {
+        grid-template-columns: 1fr;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+        width: 100%;
+        margin-top: 10px;
+    }
+    
+    .action-buttons .btn {
+        width: 100%;
+        margin-bottom: 5px;
+    }
+    
+    .dashboard-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+/* Improve transaction type selector styles */
+.transaction-type-selector .radio-group {
+    display: flex;
+    gap: 15px;
+    margin-top: 5px;
+}
+
+.transaction-type-selector label {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    position: relative;
+}
+
+.transaction-type-selector input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+}
+
+.radio-label {
+    padding: 8px 20px;
+    border-radius: 20px;
+    margin-left: 0;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    display: inline-block;
+    width: 80px;
+    text-align: center;
+}
+
+.radio-label.expense {
+    color: #f44336;
+    border: 2px solid #f44336;
+}
+
+.radio-label.income {
+    color: #4CAF50;
+    border: 2px solid #4CAF50;
+}
+
+input[type="radio"]:checked + .radio-label.expense {
+    background-color: #f44336;
+    color: white;
+    box-shadow: 0 2px 4px rgba(244, 67, 54, 0.3);
+}
+
+input[type="radio"]:checked + .radio-label.income {
+    background-color: #4CAF50;
+    color: white;
+    box-shadow: 0 2px 4px rgba(76, 175, 80, 0.3);
+}
+
+/* Enhanced modal content styling */
+.modal-content.expense-modal {
+    background-color: #fff9f9;
+    border-left: 4px solid #f44336;
+}
+
+.modal-content.income-modal {
+    background-color: #f7fff7;
+    border-left: 4px solid #4CAF50;
 }

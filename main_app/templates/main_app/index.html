@@ -54,23 +54,6 @@
         </div>
 
         <div class="dashboard-main">
-            <div class="chart-section">
-                <div class="charts-container">
-                    <div class="chart-card">
-                        <h3>Expense Distribution</h3>
-                        <div class="chart-container">
-                            <canvas id="expenseChart"></canvas>
-                        </div>
-                    </div>
-                    <div class="chart-card">
-                        <h3>Income vs Expenses</h3>
-                        <div class="chart-container">
-                            <canvas id="incomeExpenseChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <div class="recent-expenses">
                 <h2>Recent Transactions</h2>
                 <table class="expense-table">
@@ -112,6 +95,24 @@
                         {% endfor %}
                     </tbody>
                 </table>
+            </div>
+
+            <div class="chart-section">
+                <h2>Financial Analytics</h2>
+                <div class="charts-container">
+                    <div class="chart-card">
+                        <h3>Expense Distribution</h3>
+                        <div class="chart-container">
+                            <canvas id="expenseChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <h3>Income vs Expenses</h3>
+                        <div class="chart-container">
+                            <canvas id="incomeExpenseChart"></canvas>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
