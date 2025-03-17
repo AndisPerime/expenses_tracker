@@ -3,7 +3,7 @@
 <html>
 <head>
     <title>{% block title %}Expenses Tracker{% endblock %}</title>
-    <link rel="stylesheet" href="{% static 'main_app/css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'main_app/css/style.css' %}" type="text/css">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     {% block extra_css %}{% endblock %}
 </head>
@@ -22,7 +22,7 @@
                         <div class="dropdown-menu">
                             <a href="#">Profile</a>
                             <a href="#">Settings</a>
-                            <a href="#">Logout</a>
+                            <a href="{% url 'logout' %}">Logout</a>
                         </div>
                     {% else %}
                         <a href="#" onclick="showLoginForm()">Login</a>
@@ -37,7 +37,7 @@
             <div id="auth-container" class="container">
                 <div id="login-form" class="form-container active">
                     <h2>Login to Expenses Tracker</h2>
-                    <form action="/login/" method="post">
+                    <form action="{% url 'login' %}" method="post">
                         {% csrf_token %}
                         <div class="form-group">
                             <label for="username">Username</label>
@@ -58,7 +58,7 @@
                 
                 <div id="register-form" class="form-container">
                     <h2>Create Account</h2>
-                    <form action="/register/" method="post">
+                    <form action="{% url 'register' %}" method="post">
                         {% csrf_token %}
                         <div class="form-group">
                             <label for="reg-username">Username</label>
@@ -90,6 +90,17 @@
                 {% block content %}{% endblock %}
             </div>
         {% endif %}
+
+        <!-- Add message display area -->
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="message {{ message.tags }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
     </main>
 
     <footer>
@@ -114,6 +125,56 @@
             const authContainer = document.getElementById('auth-container');
             authContainer.style.display = 'block';
         }
+
+        // Add form validation
+        document.addEventListener('DOMContentLoaded', function() {
+            // Login form validation
+            const loginForm = document.querySelector('#login-form form');
+            if (loginForm) {
+                loginForm.addEventListener('submit', function(e) {
+                    const username = document.getElementById('username').value.trim();
+                    const password = document.getElementById('password').value;
+                    
+                    if (!username || !password) {
+                        e.preventDefault();
+                        alert('Please enter both username and password');
+                    }
+                });
+            }
+            
+            // Register form validation
+            const registerForm = document.querySelector('#register-form form');
+            if (registerForm) {
+                registerForm.addEventListener('submit', function(e) {
+                    const username = document.getElementById('reg-username').value.trim();
+                    const email = document.getElementById('email').value.trim();
+                    const password = document.getElementById('reg-password').value;
+                    const confirmPassword = document.getElementById('confirm-password').value;
+                    
+                    if (!username || !email || !password || !confirmPassword) {
+                        e.preventDefault();
+                        alert('Please fill out all fields');
+                        return;
+                    }
+                    
+                    if (password !== confirmPassword) {
+                        e.preventDefault();
+                        alert('Passwords do not match');
+                    }
+                });
+            }
+            
+            // Auto-hide messages after 5 seconds
+            const messages = document.querySelectorAll('.message');
+            messages.forEach(function(message) {
+                setTimeout(function() {
+                    message.style.opacity = '0';
+                    setTimeout(function() {
+                        message.style.display = 'none';
+                    }, 500);
+                }, 5000);
+            });
+        });
     </script>
     {% block extra_js %}{% endblock %}
 </body>

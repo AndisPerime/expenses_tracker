@@ -2,82 +2,455 @@
 
 {% block title %}Dashboard - Expenses Tracker{% endblock %}
 
+{% block extra_css %}
+<!-- Add Chart.js library -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
 {% block content %}
     <div class="dashboard">
         <div class="dashboard-header">
             <h1>Expense Dashboard</h1>
-            <button class="btn add-expense-btn">Add New Expense</button>
+            <div class="date-range-filter">
+                <select id="date-range">
+                    <option value="current-month">Current Month</option>
+                    <option value="last-month">Last Month</option>
+                    <option value="last-3-months">Last 3 Months</option>
+                    <option value="last-6-months">Last 6 Months</option>
+                    <option value="year-to-date">Year to Date</option>
+                    <option value="custom">Custom Range</option>
+                </select>
+                <div id="custom-dates" style="display: none;">
+                    <input type="date" id="start-date">
+                    <span>to</span>
+                    <input type="date" id="end-date">
+                    <button id="apply-range" class="btn btn-small">Apply</button>
+                </div>
+            </div>
+            <button class="btn add-expense-btn" onclick="showExpenseForm()">Add New Expense</button>
         </div>
 
         <div class="summary-cards">
             <div class="card">
                 <div class="card-header">This Month</div>
-                <div class="card-value">$1,250.00</div>
+                <div class="card-value">£1,250.00</div>
                 <div class="card-footer">15 expenses</div>
             </div>
             <div class="card">
                 <div class="card-header">Last Month</div>
-                <div class="card-value">$980.50</div>
+                <div class="card-value">£980.50</div>
                 <div class="card-footer">12 expenses</div>
             </div>
             <div class="card">
                 <div class="card-header">Average</div>
-                <div class="card-value">$1,100.25</div>
+                <div class="card-value">£1,100.25</div>
                 <div class="card-footer">per month</div>
             </div>
         </div>
 
-        <div class="recent-expenses">
-            <h2>Recent Expenses</h2>
-            <table class="expense-table">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Description</th>
-                        <th>Category</th>
-                        <th>Amount</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for expense in expenses %}
-                    <tr>
-                        <td>{{ expense.date }}</td>
-                        <td>{{ expense.description }}</td>
-                        <td>
-                            {% with bg_color=expense.category.color|default:"#dddddd" %}
-                            <span class="category-badge">
-                                {{ expense.category.name }}
-                            </span>
-                            {% endwith %}
-                        </td>
-                        <td>${{ expense.amount }}</td>
-                        <td>
-                            <button class="action-btn edit-btn">Edit</button>
-                            <button class="action-btn delete-btn">Delete</button>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="5" class="no-data">No expenses recorded yet. Add your first expense!</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+        <div class="dashboard-main">
+            <div class="recent-expenses">
+                <h2>Recent Expenses</h2>
+                <table class="expense-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Description</th>
+                            <th>Category</th>
+                            <th>Amount</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for expense in expenses %}
+                        <tr>
+                            <td>{{ expense.date }}</td>
+                            <td>{{ expense.description }}</td>
+                            <td>
+                                {% with bg_color=expense.category.color|default:"#ffffff" %}
+                                <span class="category-badge">
+                                    {{ expense.category.name }}
+                                </span>
+                                {% endwith %}
+                            </td>
+                            <td>£{{ expense.amount }}</td>
+                            <td>
+                                <button class="action-btn edit-btn">Edit</button>
+                                <button class="action-btn delete-btn">Delete</button>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr></tr>
+                            <td colspan="5" class="no-data">No expenses recorded yet. Add your first expense!</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
 
-        <div class="expense-distribution">
-            <h2>Expense Distribution</h2>
-            <div class="chart-container">
-                <!-- Chart would go here - placeholder for now -->
-                <div class="placeholder-chart">
-                    <div class="chart-segment" style="width: 30%; background-color: #4CAF50;">Food (30%)</div>
-                    <div class="chart-segment" style="width: 25%; background-color: #2196F3;">Housing (25%)</div>
-                    <div class="chart-segment" style="width: 20%; background-color: #FFC107;">Transportation (20%)</div>
-                    <div class="chart-segment" style="width: 15%; background-color: #9C27B0;">Entertainment (15%)</div>
-                    <div class="chart-segment" style="width: 10%; background-color: #FF5722;">Other (10%)</div>
+            <div class="expense-distribution">
+                <h2>Expense Distribution</h2>
+                <div class="chart-container">
+                    <canvas id="expenseChart"></canvas>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Add Expense Modal -->
+    <div id="expense-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="hideExpenseForm()">&times;</span>
+            <h2>Add New Expense</h2>
+            <form id="expense-form" action="{% url 'add_expense' %}" method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="expense-amount">Amount (£)</label>
+                    <input type="number" id="expense-amount" name="amount" step="0.01" min="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label for="expense-description">Description</label>
+                    <input type="text" id="expense-description" name="description" required>
+                </div>
+                <div class="form-group">
+                    <label for="expense-category">Category</label>
+                    <select id="expense-category" name="category" required>
+                        <option value="">Select a category</option>
+                        {% for category in categories %}
+                            <option value="{{ category.id }}">{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group"></div>
+                    <label for="expense-date">Date</label>
+                    <input type="date" id="expense-date" name="date" required>
+                </div>
+                <div class="form-group checkbox-group">
+                    <input type="checkbox" id="continue-adding" name="continue_adding">
+                    <label for="continue-adding">Continue adding expenses</label>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="hideExpenseForm()">Cancel</button>
+                    <button type="submit" class="btn">Save Expense</button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Set today's date in the date field when the form is shown
+    function setTodayDate() {
+        const today = new Date();
+        const year = today.getFullYear();
+        let month = today.getMonth() + 1;
+        let day = today.getDate();
+        
+        // Add leading zeros if needed
+        month = month < 10 ? '0' + month : month;
+        day = day < 10 ? '0' + day : day;
+        
+        const formattedDate = `${year}-${month}-${day}`;
+        document.getElementById('expense-date').value = formattedDate;
+    }
+
+    function showExpenseForm() {
+        const modal = document.getElementById('expense-modal');
+        modal.classList.add('show');
+        document.body.style.overflow = 'hidden'; // Prevent scrolling behind modal
+        
+        // Set today's date
+        setTodayDate();
+        
+        // Set focus to the first input field after a small delay
+        setTimeout(() => {
+            document.getElementById('expense-amount').focus();
+        }, 300);
+    }
+    
+    function hideExpenseForm() {
+        const modal = document.getElementById('expense-modal');
+        modal.classList.remove('show');
+        document.body.style.overflow = ''; // Restore scrolling
+        
+        // Reset the form after modal is closed
+        setTimeout(() => {
+            document.getElementById('expense-form').reset();
+        }, 300);
+    }
+    
+    // Close the modal if user clicks outside of it
+    window.onclick = function(event) {
+        const modal = document.getElementById('expense-modal');
+        if (event.target == modal) {
+            hideExpenseForm();
+        }
+    }
+    
+    // Handle form submission
+    document.getElementById('expense-form').addEventListener('submit', function(e) {
+        const form = this;
+        const amount = form.querySelector('#expense-amount').value;
+        const description = form.querySelector('#expense-description').value;
+        const category = form.querySelector('#expense-category').value;
+        const date = form.querySelector('#expense-date').value;
+        
+        // Check that all fields are valid
+        if (!amount || !description || !date) {
+            e.preventDefault();
+            alert('Please fill out all fields.');
+            return;
+        }
+        
+        // Validate that category is a number
+        if (!category || isNaN(parseInt(category))) {
+            e.preventDefault();
+            alert('Please select a valid category.');
+            return;
+        }
+        
+        // Check if the "Continue adding" checkbox is checked
+        const continueAdding = form.querySelector('#continue-adding').checked;
+        
+        if (continueAdding) {
+            e.preventDefault(); // Prevent default form submission
+            
+            // Create a form data object with the proper CSRF token
+            const formData = new FormData(form);
+            
+            // Add the X-CSRFToken header
+            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': csrftoken
+                },
+                credentials: 'same-origin'
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // Show success message
+                    alert('Expense saved successfully!');
+                    
+                    // Reset form but keep it open
+                    form.reset();
+                    
+                    // Reset date to today
+                    setTodayDate();
+                    
+                    // Re-focus amount field
+                    document.getElementById('expense-amount').focus();
+                    
+                    // If the backend provided updated expense data, refresh the list
+                    if (data.expenses) {
+                        // You could update the expense table here without a page refresh
+                        // For now, just refresh the page to show updated data
+                        location.reload();
+                    }
+                } else {
+                    alert('Error: ' + (data.error || 'Unknown error occurred'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+            });
+        }
+        // If continueAdding is false, let the form submit normally
+    });
+
+    // Initialize by setting today's date when the page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        // This ensures the date field will have today's date if the form is shown
+        // It doesn't set the date immediately as the form starts hidden
+    });
+
+    // Dashboard Date Range Handling
+    document.addEventListener('DOMContentLoaded', function() {
+        const dateRangeSelect = document.getElementById('date-range');
+        const customDatesDiv = document.getElementById('custom-dates');
+        const startDateInput = document.getElementById('start-date');
+        const endDateInput = document.getElementById('end-date');
+        const applyRangeBtn = document.getElementById('apply-range');
+        
+        // Set default dates for custom range
+        const today = new Date();
+        const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+        
+        startDateInput.valueAsDate = firstDayOfMonth;
+        endDateInput.valueAsDate = today;
+
+        // Handle date range changes
+        dateRangeSelect.addEventListener('change', function() {
+            if (this.value === 'custom') {
+                customDatesDiv.style.display = 'inline-block';
+            } else {
+                customDatesDiv.style.display = 'none';
+                updateDashboard(this.value);
+            }
+        });
+
+        applyRangeBtn.addEventListener('click', function() {
+            updateDashboard('custom', startDateInput.value, endDateInput.value);
+        });
+
+        // Initialize dashboard with current month
+        updateDashboard('current-month');
+        
+        // Create the initial chart
+        createExpenseChart();
+    });
+
+    function updateDashboard(range, startDate, endDate) {
+        // Prepare the AJAX request data
+        const data = {
+            range: range
+        };
+        
+        if (range === 'custom') {
+            data.start_date = startDate;
+            data.end_date = endDate;
+        }
+
+        // Get CSRF token for the AJAX request
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        
+        // Make AJAX request to get updated data
+        fetch('/update-dashboard/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Update summary cards
+            document.querySelector('.card:nth-child(1) .card-value').textContent = `£${data.total_amount}`;
+            document.querySelector('.card:nth-child(1) .card-footer').textContent = `${data.total_count} expenses`;
+            
+            // Update expense list
+            updateExpenseTable(data.expenses);
+            
+            // Update chart
+            updateExpenseChart(data.chart_data);
+        })
+        .catch(error => console.error('Error updating dashboard:', error));
+    }
+
+    function updateExpenseTable(expenses) {
+        const tableBody = document.querySelector('.expense-table tbody');
+        tableBody.innerHTML = ''; // Clear existing rows
+        
+        if (expenses.length === 0) {
+            // No expenses for the selected period
+            const row = document.createElement('tr');
+            row.innerHTML = `<td colspan="5" class="no-data">No expenses recorded for the selected period.</td>`;
+            tableBody.appendChild(row);
+            return;
+        }
+        
+        // Add rows for each expense
+        expenses.forEach(expense => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${expense.date}</td>
+                <td>${expense.name}</td>
+                <td>
+                    <span class="category-badge" style="background-color: ${expense.category_color}">
+                        ${expense.category_name}
+                    </span>
+                </td>
+                <td>£${expense.amount}</td>
+                <td>
+                    <button class="action-btn edit-btn" onclick="editExpense(${expense.id})">Edit</button>
+                    <button class="action-btn delete-btn" onclick="deleteExpense(${expense.id})">Delete</button>
+                </td>
+            `;
+            tableBody.appendChild(row);
+        });
+    }
+
+    // Initialize the expense distribution chart
+    function createExpenseChart() {
+        const ctx = document.getElementById('expenseChart').getContext('2d');
+        window.expenseChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: [],
+                datasets: [{
+                    data: [],
+                    backgroundColor: [],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right'
+                    },
+                    title: {
+                        display: true,
+                        text: 'Expense Distribution by Category'
+                    }
+                }
+            }
+        });
+    }
+
+    // Update the chart with new data
+    function updateExpenseChart(chartData) {
+        window.expenseChart.data.labels = chartData.labels;
+        window.expenseChart.data.datasets[0].data = chartData.data;
+        window.expenseChart.data.datasets[0].backgroundColor = chartData.colors;
+        window.expenseChart.update();
+    }
+    
+    function editExpense(id) {
+        // Handle edit functionality
+        console.log('Edit expense:', id);
+        // Implement this later
+    }
+    
+    function deleteExpense(id) {
+        if (confirm('Are you sure you want to delete this expense?')) {
+            // Get CSRF token
+            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            
+            fetch(`/delete-expense/${id}/`, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': csrftoken
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Expense deleted successfully!');
+                    // Refresh dashboard
+                    const dateRange = document.getElementById('date-range').value;
+                    updateDashboard(dateRange);
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    }
+</script>
 {% endblock %}
