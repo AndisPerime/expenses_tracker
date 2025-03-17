@@ -10,8 +10,16 @@
 {% block content %}
     <div class="dashboard">
         <div class="dashboard-header">
-            <h1>Expense Dashboard</h1>
+            <h1>Financial Dashboard</h1>
+            <div class="action-buttons">
+                <button class="btn generate-report-btn" onclick="showReportModal()">Generate Report</button>
+                <button class="btn add-expense-btn" onclick="showExpenseForm()">Add Transaction</button>
+            </div>
+        </div>
+        
+        <div class="filter-container">
             <div class="date-range-filter">
+                <label for="date-range">Time Period:</label>
                 <select id="date-range">
                     <option value="current-month">Current Month</option>
                     <option value="last-month">Last Month</option>
@@ -27,30 +35,44 @@
                     <button id="apply-range" class="btn btn-small">Apply</button>
                 </div>
             </div>
-            <button class="btn add-expense-btn" onclick="showExpenseForm()">Add New Expense</button>
         </div>
 
         <div class="summary-cards">
-            <div class="card">
-                <div class="card-header">This Month</div>
-                <div class="card-value">£1,250.00</div>
-                <div class="card-footer">15 expenses</div>
+            <div class="card income-card">
+                <div class="card-header">Income</div>
+                <div class="card-value income-amount">£<span id="income-value">{{ total_income|floatformat:2|default:"0.00" }}</span></div>
             </div>
-            <div class="card">
-                <div class="card-header">Last Month</div>
-                <div class="card-value">£980.50</div>
-                <div class="card-footer">12 expenses</div>
+            <div class="card expense-card">
+                <div class="card-header">Expenses</div>
+                <div class="card-value expense-amount">£<span id="expense-value">{{ total_expenses|floatformat:2|default:"0.00" }}</span></div>
             </div>
-            <div class="card">
-                <div class="card-header">Average</div>
-                <div class="card-value">£1,100.25</div>
-                <div class="card-footer">per month</div>
+            <div class="card balance-card">
+                <div class="card-header">Net Balance</div>
+                <div class="card-value">£<span id="balance-value">{{ net_amount|floatformat:2|default:"0.00" }}</span></div>
+                <div class="card-footer"><span id="transaction-count">{{ total_count }}</span> transactions</div>
             </div>
         </div>
 
         <div class="dashboard-main">
+            <div class="chart-section">
+                <div class="charts-container">
+                    <div class="chart-card">
+                        <h3>Expense Distribution</h3>
+                        <div class="chart-container">
+                            <canvas id="expenseChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <h3>Income vs Expenses</h3>
+                        <div class="chart-container">
+                            <canvas id="incomeExpenseChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="recent-expenses">
-                <h2>Recent Expenses</h2>
+                <h2>Recent Transactions</h2>
                 <table class="expense-table">
                     <thead>
                         <tr>
@@ -65,34 +87,31 @@
                         {% for expense in expenses %}
                         <tr>
                             <td>{{ expense.date }}</td>
-                            <td>{{ expense.description }}</td>
+                            <td>{{ expense.name }}</td>
                             <td>
-                                {% with bg_color=expense.category.color|default:"#ffffff" %}
-                                <span class="category-badge">
+                                <span class="category-badge" style="background-color: {{ expense.category.color|default:'#777777' }}">
                                     {{ expense.category.name }}
                                 </span>
-                                {% endwith %}
                             </td>
-                            <td>£{{ expense.amount }}</td>
                             <td>
-                                <button class="action-btn edit-btn">Edit</button>
-                                <button class="action-btn delete-btn">Delete</button>
+                                {% if expense.transaction_type == 'income' %}
+                                <span class="income-amount">+£{{ expense.amount|floatformat:2 }}</span>
+                                {% else %}
+                                <span class="expense-amount">-£{{ expense.amount|floatformat:2 }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button class="action-btn edit-btn" onclick="editExpense({{ expense.id }})">Edit</button>
+                                <button class="action-btn delete-btn" onclick="deleteExpense({{ expense.id }})">Delete</button>
                             </td>
                         </tr>
                         {% empty %}
-                        <tr></tr>
-                            <td colspan="5" class="no-data">No expenses recorded yet. Add your first expense!</td>
+                        <tr>
+                            <td colspan="5" class="no-data">No transactions recorded yet. Add your first transaction!</td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
-            </div>
-
-            <div class="expense-distribution">
-                <h2>Expense Distribution</h2>
-                <div class="chart-container">
-                    <canvas id="expenseChart"></canvas>
-                </div>
             </div>
         </div>
     </div>
@@ -101,9 +120,23 @@
     <div id="expense-modal" class="modal">
         <div class="modal-content">
             <span class="close-button" onclick="hideExpenseForm()">&times;</span>
-            <h2>Add New Expense</h2>
+            <h2>Add New Transaction</h2>
             <form id="expense-form" action="{% url 'add_expense' %}" method="post">
                 {% csrf_token %}
+                <input type="hidden" id="expense-id" name="expense_id">
+                <div class="form-group transaction-type-selector">
+                    <label>Transaction Type</label>
+                    <div class="radio-group">
+                        <label>
+                            <input type="radio" name="transaction_type" value="expense" checked> 
+                            <span class="radio-label expense">Expense</span>
+                        </label>
+                        <label>
+                            <input type="radio" name="transaction_type" value="income"> 
+                            <span class="radio-label income">Income</span>
+                        </label>
+                    </div>
+                </div>
                 <div class="form-group">
                     <label for="expense-amount">Amount (£)</label>
                     <input type="number" id="expense-amount" name="amount" step="0.01" min="0.01" required>
@@ -112,7 +145,7 @@
                     <label for="expense-description">Description</label>
                     <input type="text" id="expense-description" name="description" required>
                 </div>
-                <div class="form-group">
+                <div class="form-group" id="category-field">
                     <label for="expense-category">Category</label>
                     <select id="expense-category" name="category" required>
                         <option value="">Select a category</option>
@@ -121,17 +154,77 @@
                         {% endfor %}
                     </select>
                 </div>
-                <div class="form-group"></div>
+                <div class="form-group">
                     <label for="expense-date">Date</label>
                     <input type="date" id="expense-date" name="date" required>
                 </div>
                 <div class="form-group checkbox-group">
                     <input type="checkbox" id="continue-adding" name="continue_adding">
-                    <label for="continue-adding">Continue adding expenses</label>
+                    <label for="continue-adding">Continue adding transactions</label>
                 </div>
                 <div class="form-actions">
                     <button type="button" class="btn btn-secondary" onclick="hideExpenseForm()">Cancel</button>
-                    <button type="submit" class="btn">Save Expense</button>
+                    <button type="submit" class="btn" id="submit-btn">Save Transaction</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Report Generator Modal -->
+    <div id="report-modal" class="modal">
+        <div class="modal-content report-modal">
+            <span class="close-button" onclick="hideReportModal()">&times;</span>
+            <h2>Generate Financial Report</h2>
+            <form id="report-form" action="{% url 'generate_report' %}" method="post" target="_blank">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="report-title">Report Title</label>
+                    <input type="text" id="report-title" name="title" value="Financial Report" required>
+                </div>
+                <div class="form-group">
+                    <label>Time Period</label>
+                    <select id="report-period" name="period" required>
+                        <option value="current-month">Current Month</option>
+                        <option value="last-month">Last Month</option>
+                        <option value="last-3-months">Last 3 Months</option>
+                        <option value="last-6-months">Last 6 Months</option>
+                        <option value="year-to-date">Year to Date</option>
+                        <option value="custom">Custom Range</option>
+                    </select>
+                </div>
+                <div id="report-custom-dates" class="form-group" style="display: none;">
+                    <label>Custom Date Range</label>
+                    <div class="date-inputs">
+                        <input type="date" id="report-start-date" name="start_date">
+                        <span>to</span>
+                        <input type="date" id="report-end-date" name="end_date">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Include in Report</label>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="include-summary" name="include_summary" checked>
+                        <label for="include-summary">Summary</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="include-charts" name="include_charts" checked>
+                        <label for="include-charts">Charts</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="include-transactions" name="include_transactions" checked>
+                        <label for="include-transactions">Transaction List</label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="report-format">Format</label>
+                    <select id="report-format" name="format">
+                        <option value="pdf">PDF</option>
+                        <option value="html">HTML</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="hideReportModal()">Cancel</button>
+                    <button type="submit" class="btn">Generate Report</button>
                 </div>
             </form>
         </div>
@@ -140,6 +233,26 @@
 
 {% block extra_js %}
 <script>
+    // Global variables
+    let currentEditingId = null;
+
+    // Toast notification function
+    function showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        
+        // Show the toast
+        setTimeout(() => toast.classList.add('show'), 10);
+        
+        // Hide after 3 seconds
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
     // Set today's date in the date field when the form is shown
     function setTodayDate() {
         const today = new Date();
@@ -155,18 +268,106 @@
         document.getElementById('expense-date').value = formattedDate;
     }
 
-    function showExpenseForm() {
+    function showExpenseForm(isEdit = false) {
         const modal = document.getElementById('expense-modal');
+        const modalTitle = document.querySelector('.modal-content h2');
+        const submitBtn = document.getElementById('submit-btn');
+        const form = document.getElementById('expense-form');
+        
+        // Reset form and set defaults
+        if (!isEdit) {
+            form.reset();
+            currentEditingId = null;
+            document.getElementById('expense-id').value = '';
+            
+            // Set default values
+            setTodayDate();
+            modalTitle.textContent = 'Add New Transaction';
+            submitBtn.textContent = 'Save Transaction';
+            form.action = "{% url 'add_expense' %}";
+            
+            // Default to expense
+            document.querySelector('input[value="expense"]').checked = true;
+            
+            // Set default background
+            const modalContent = document.querySelector('.modal-content');
+            modalContent.classList.add('expense-modal');
+            modalContent.classList.remove('income-modal');
+        }
+        
+        // Show the modal
         modal.classList.add('show');
         document.body.style.overflow = 'hidden'; // Prevent scrolling behind modal
-        
-        // Set today's date
-        setTodayDate();
         
         // Set focus to the first input field after a small delay
         setTimeout(() => {
             document.getElementById('expense-amount').focus();
         }, 300);
+    }
+    
+    function editExpense(id) {
+        // Fetch expense data and populate the form
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        
+        fetch(`/get-expense/${id}/`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': csrftoken
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const expense = data.expense;
+                
+                // Set the ID for updating
+                currentEditingId = expense.id;
+                document.getElementById('expense-id').value = expense.id;
+                
+                // Fill in the form fields
+                document.getElementById('expense-amount').value = expense.amount;
+                document.getElementById('expense-description').value = expense.name;
+                document.getElementById('expense-date').value = expense.date;
+                
+                // Set transaction type
+                const expenseRadio = document.querySelector('input[value="expense"]');
+                const incomeRadio = document.querySelector('input[value="income"]');
+                
+                if (expense.transaction_type === 'income') {
+                    incomeRadio.checked = true;
+                    document.getElementById('category-field').style.display = 'none';
+                } else {
+                    expenseRadio.checked = true;
+                    document.getElementById('category-field').style.display = 'block';
+                    document.getElementById('expense-category').value = expense.category_id;
+                }
+                
+                // Update form action and title
+                const form = document.getElementById('expense-form');
+                form.action = "{% url 'update_expense' %}";
+                document.querySelector('.modal-content h2').textContent = 'Edit Transaction';
+                document.getElementById('submit-btn').textContent = 'Update Transaction';
+                
+                // Update modal style based on transaction type
+                const modalContent = document.querySelector('.modal-content');
+                if (expense.transaction_type === 'expense') {
+                    modalContent.classList.add('expense-modal');
+                    modalContent.classList.remove('income-modal');
+                } else {
+                    modalContent.classList.add('income-modal');
+                    modalContent.classList.remove('expense-modal');
+                }
+                
+                // Show the form for editing
+                showExpenseForm(true);
+            } else {
+                alert('Error loading transaction data: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while trying to edit this transaction');
+        });
     }
     
     function hideExpenseForm() {
@@ -177,102 +378,549 @@
         // Reset the form after modal is closed
         setTimeout(() => {
             document.getElementById('expense-form').reset();
+            currentEditingId = null;
         }, 300);
     }
     
-    // Close the modal if user clicks outside of it
-    window.onclick = function(event) {
-        const modal = document.getElementById('expense-modal');
-        if (event.target == modal) {
-            hideExpenseForm();
-        }
-    }
-    
-    // Handle form submission
-    document.getElementById('expense-form').addEventListener('submit', function(e) {
-        const form = this;
-        const amount = form.querySelector('#expense-amount').value;
-        const description = form.querySelector('#expense-description').value;
-        const category = form.querySelector('#expense-category').value;
-        const date = form.querySelector('#expense-date').value;
-        
-        // Check that all fields are valid
-        if (!amount || !description || !date) {
-            e.preventDefault();
-            alert('Please fill out all fields.');
-            return;
-        }
-        
-        // Validate that category is a number
-        if (!category || isNaN(parseInt(category))) {
-            e.preventDefault();
-            alert('Please select a valid category.');
-            return;
-        }
-        
-        // Check if the "Continue adding" checkbox is checked
-        const continueAdding = form.querySelector('#continue-adding').checked;
-        
-        if (continueAdding) {
-            e.preventDefault(); // Prevent default form submission
-            
-            // Create a form data object with the proper CSRF token
-            const formData = new FormData(form);
-            
-            // Add the X-CSRFToken header
+    function deleteExpense(id) {
+        if (confirm('Are you sure you want to delete this transaction? This action cannot be undone.')) {
+            // Get CSRF token
             const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
             
-            fetch(form.action, {
+            fetch(`/delete-expense/${id}/`, {
                 method: 'POST',
-                body: formData,
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
                     'X-CSRFToken': csrftoken
-                },
-                credentials: 'same-origin'
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
                 }
-                return response.json();
             })
+            .then(response => response.json())
             .then(data => {
                 if (data.success) {
                     // Show success message
-                    alert('Expense saved successfully!');
+                    alert('Transaction deleted successfully!');
                     
-                    // Reset form but keep it open
-                    form.reset();
-                    
-                    // Reset date to today
-                    setTodayDate();
-                    
-                    // Re-focus amount field
-                    document.getElementById('expense-amount').focus();
-                    
-                    // If the backend provided updated expense data, refresh the list
-                    if (data.expenses) {
-                        // You could update the expense table here without a page refresh
-                        // For now, just refresh the page to show updated data
-                        location.reload();
-                    }
+                    // Refresh dashboard with current date range
+                    const dateRange = document.getElementById('date-range').value;
+                    updateDashboard(dateRange);
                 } else {
-                    alert('Error: ' + (data.error || 'Unknown error occurred'));
+                    alert('Error: ' + (data.error || 'Could not delete transaction'));
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('An error occurred. Please try again.');
+                alert('An error occurred while trying to delete this transaction');
             });
         }
-        // If continueAdding is false, let the form submit normally
+    }
+    
+    // Initialize the expense distribution charts
+    function createExpenseChart() {
+        const ctx1 = document.getElementById('expenseChart').getContext('2d');
+        window.expenseChart = new Chart(ctx1, {
+            type: 'doughnut',
+            data: {
+                labels: [],
+                datasets: [{
+                    data: [],
+                    backgroundColor: [],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            boxWidth: 12,
+                            padding: 10,
+                            font: {
+                                size: 11
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.raw || 0;
+                                const total = context.dataset.data.reduce((sum, val) => sum + parseFloat(val), 0);
+                                const percentage = total > 0 ? 
+                                    Math.round((value / total) * 100) : 0;
+                                return `${label}: £${value} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Add a second chart for income vs expense breakdown
+        const ctx2 = document.getElementById('incomeExpenseChart').getContext('2d');
+        window.incomeExpenseChart = new Chart(ctx2, {
+            type: 'bar',
+            data: {
+                labels: ['Income', 'Expenses', 'Net'],
+                datasets: [{
+                    data: [0, 0, 0],
+                    backgroundColor: [
+                        'rgba(75, 192, 192, 0.5)',
+                        'rgba(255, 99, 132, 0.5)',
+                        'rgba(54, 162, 235, 0.5)'
+                    ],
+                    borderColor: [
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return '£' + value;
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `£${parseFloat(context.raw).toFixed(2)}`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Update the chart with new data
+    function updateExpenseChart(chartData) {
+        // Convert chart data values to 2 decimal places
+        const formattedData = chartData.data.map(value => parseFloat(value));
+        
+        window.expenseChart.data.labels = chartData.labels;
+        window.expenseChart.data.datasets[0].data = formattedData;
+        window.expenseChart.data.datasets[0].backgroundColor = chartData.colors;
+        window.expenseChart.update();
+        
+        // Update the income vs expense chart
+        window.incomeExpenseChart.data.datasets[0].data = [
+            parseFloat(chartData.total_income),
+            parseFloat(chartData.total_expenses),
+            parseFloat(chartData.net_amount)
+        ];
+        window.incomeExpenseChart.update();
+    }
+
+    // Dashboard Date Range Handling
+    document.addEventListener('DOMContentLoaded', function() {
+        const dateRangeSelect = document.getElementById('date-range');
+        const customDatesDiv = document.getElementById('custom-dates');
+        const startDateInput = document.getElementById('start-date');
+        const endDateInput = document.getElementById('end-date');
+        const applyRangeBtn = document.getElementById('apply-range');
+        
+        // Set default dates for custom range
+        const today = new Date();
+        const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+        
+        startDateInput.valueAsDate = firstDayOfMonth;
+        endDateInput.valueAsDate = today;
+
+        // Handle date range changes
+        dateRangeSelect.addEventListener('change', function() {
+            if (this.value === 'custom') {
+                customDatesDiv.style.display = 'inline-block';
+            } else {
+                customDatesDiv.style.display = 'none';
+                updateDashboard(this.value);
+            }
+        });
+
+        applyRangeBtn.addEventListener('click', function() {
+            updateDashboard('custom', startDateInput.value, endDateInput.value);
+        });
+
+        // Initialize dashboard with current month
+        updateDashboard('current-month');
+        
+        // Create the initial chart
+        createExpenseChart();
     });
 
-    // Initialize by setting today's date when the page loads
+    function updateDashboard(range, startDate, endDate) {
+        // Prepare the AJAX request data
+        const data = {
+            range: range
+        };
+        
+        if (range === 'custom') {
+            data.start_date = startDate;
+            data.end_date = endDate;
+        }
+
+        // Get CSRF token for the AJAX request
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        
+        // Make AJAX request to get updated data
+        fetch('/update-dashboard/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Update summary cards
+            document.getElementById('income-value').textContent = parseFloat(data.total_income).toFixed(2);
+            document.getElementById('expense-value').textContent = parseFloat(data.total_expenses).toFixed(2);
+            document.getElementById('balance-value').textContent = parseFloat(data.net_amount).toFixed(2);
+            document.getElementById('transaction-count').textContent = data.total_count;
+            
+            // Apply color to net balance based on whether it's positive or negative
+            const balanceElement = document.getElementById('balance-value').parentElement;
+            if (parseFloat(data.net_amount) < 0) {
+                balanceElement.classList.add('expense-amount');
+                balanceElement.classList.remove('income-amount');
+            } else {
+                balanceElement.classList.add('income-amount');
+                balanceElement.classList.remove('expense-amount');
+            }
+            
+            // Update expense list
+            updateExpenseTable(data.expenses);
+            
+            // Update charts
+            updateExpenseChart(data.chart_data);
+            
+            // Show toast notification
+            showToast('Dashboard updated successfully', 'success');
+        })
+        .catch(error => {
+            console.error('Error updating dashboard:', error);
+            showToast('Error updating dashboard data', 'error');
+        });
+    }
+
+    function updateExpenseTable(expenses) {
+        const tableBody = document.querySelector('.expense-table tbody');
+        tableBody.innerHTML = ''; // Clear existing rows
+        
+        if (expenses.length === 0) {
+            // No expenses for the selected period
+            const row = document.createElement('tr');
+            row.innerHTML = `<td colspan="5" class="no-data">No expenses recorded for the selected period.</td>`;
+            tableBody.appendChild(row);
+            return;
+        }
+        
+        // Add rows for each expense
+        expenses.forEach(expense => {
+            const row = document.createElement('tr');
+            
+            // Set different styling for income vs expenses
+            let amountDisplay = '';
+            if (expense.transaction_type === 'income') {
+                amountDisplay = `<span class="income-amount">+£${parseFloat(expense.amount).toFixed(2)}</span>`;
+            } else {
+                amountDisplay = `<span class="expense-amount">-£${parseFloat(expense.amount).toFixed(2)}</span>`;
+            }
+            
+            row.innerHTML = `
+                <td>${expense.date}</td>
+                <td>${expense.name}</td>
+                <td>
+                    <span class="category-badge" style="background-color: ${expense.category_color}">
+                        ${expense.category_name}
+                    </span>
+                </td>
+                <td>${amountDisplay}</td>
+                <td>
+                    <button class="action-btn edit-btn" onclick="editExpense(${expense.id})">Edit</button>
+                    <button class="action-btn delete-btn" onclick="deleteExpense(${expense.id})">Delete</button>
+                </td>
+            `;
+            tableBody.appendChild(row);
+        });
+    }
+
+    // Initialize the expense distribution charts
+    function createExpenseChart() {
+        const ctx1 = document.getElementById('expenseChart').getContext('2d');
+        window.expenseChart = new Chart(ctx1, {
+            type: 'doughnut',
+            data: {
+                labels: [],
+                datasets: [{
+                    data: [],
+                    backgroundColor: [],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right'
+                    },
+                    title: {
+                        display: true,
+                        text: 'Expense Distribution by Category'
+                    }
+                }
+            }
+        });
+        
+        // Add a second chart for income vs expense breakdown
+        const ctx2 = document.getElementById('incomeExpenseChart').getContext('2d');
+        window.incomeExpenseChart = new Chart(ctx2, {
+            type: 'bar',
+            data: {
+                labels: ['Income', 'Expenses', 'Net'],
+                datasets: [{
+                    data: [0, 0, 0],
+                    backgroundColor: [
+                        'rgba(75, 192, 192, 0.5)',
+                        'rgba(255, 99, 132, 0.5)',
+                        'rgba(54, 162, 235, 0.5)'
+                    ],
+                    borderColor: [
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    title: {
+                        display: true,
+                        text: 'Income vs Expenses'
+                    }
+                }
+            }
+        });
+    }
+
+    // Update the chart with new data
+    function updateExpenseChart(chartData) {
+        // Convert chart data values to 2 decimal places
+        const formattedData = chartData.data.map(value => parseFloat(value).toFixed(2));
+        
+        window.expenseChart.data.labels = chartData.labels;
+        window.expenseChart.data.datasets[0].data = formattedData;
+        window.expenseChart.data.datasets[0].backgroundColor = chartData.colors;
+        window.expenseChart.update();
+        
+        // Update the income vs expense chart
+        window.incomeExpenseChart.data.datasets[0].data = [
+            parseFloat(chartData.total_income).toFixed(2),
+            parseFloat(chartData.total_expenses).toFixed(2),
+            parseFloat(chartData.net_amount).toFixed(2)
+        ];
+        window.incomeExpenseChart.update();
+    }
+    
+    function editExpense(id) {
+        // Handle edit functionality
+        console.log('Edit expense:', id);
+        // Implement this later
+    }
+    
+    function deleteExpense(id) {
+        if (confirm('Are you sure you want to delete this expense?')) {
+            // Get CSRF token
+            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            
+            fetch(`/delete-expense/${id}/`, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': csrftoken
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Expense deleted successfully!');
+                    // Refresh dashboard
+                    const dateRange = document.getElementById('date-range').value;
+                    updateDashboard(dateRange);
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    }
+    
+    function showReportModal() {
+        const modal = document.getElementById('report-modal');
+        modal.classList.add('show');
+        document.body.style.overflow = 'hidden';
+        
+        // Set the current date range from the dashboard
+        const dashboardRange = document.getElementById('date-range').value;
+        document.getElementById('report-period').value = dashboardRange;
+        
+        // If custom range is selected, copy the dates
+        if (dashboardRange === 'custom') {
+            document.getElementById('report-custom-dates').style.display = 'block';
+            document.getElementById('report-start-date').value = document.getElementById('start-date').value;
+            document.getElementById('report-end-date').value = document.getElementById('end-date').value;
+        }
+    }
+    
+    function hideReportModal() {
+        const modal = document.getElementById('report-modal');
+        modal.classList.remove('show');
+        document.body.style.overflow = '';
+    }
+    
+    // Close the modal if user clicks outside of it
+    window.onclick = function(event) {
+        const expenseModal = document.getElementById('expense-modal');
+        const reportModal = document.getElementById('report-modal');
+        
+        if (event.target == expenseModal) {
+            hideExpenseForm();
+        }
+        
+        if (event.target == reportModal) {
+            hideReportModal();
+        }
+    }
+    
+    // Update form labels based on transaction type
     document.addEventListener('DOMContentLoaded', function() {
-        // This ensures the date field will have today's date if the form is shown
-        // It doesn't set the date immediately as the form starts hidden
+        const transactionTypeRadios = document.querySelectorAll('input[name="transaction_type"]');
+        const categoryField = document.getElementById('category-field');
+        
+        transactionTypeRadios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                if (this.value === 'income') {
+                    categoryField.style.display = 'none';
+                } else {
+                    categoryField.style.display = 'block';
+                }
+            });
+        });
+
+        // Setup report period change event
+        const reportPeriod = document.getElementById('report-period');
+        const reportCustomDates = document.getElementById('report-custom-dates');
+        
+        reportPeriod.addEventListener('change', function() {
+            if (this.value === 'custom') {
+                reportCustomDates.style.display = 'block';
+            } else {
+                reportCustomDates.style.display = 'none';
+            }
+        });
+        
+        // Handle form submission with "Continue Adding" checkbox
+        document.getElementById('expense-form').addEventListener('submit', function(e) {
+            const form = this;
+            const amount = form.querySelector('#expense-amount').value;
+            const description = form.querySelector('#expense-description').value;
+            const transactionType = form.querySelector('input[name="transaction_type"]:checked').value;
+            const date = form.querySelector('#expense-date').value;
+            const continueAdding = form.querySelector('#continue-adding').checked;
+            
+            // Validate required fields
+            if (!amount || !description || !date) {
+                e.preventDefault();
+                showToast('Please fill out all required fields.', 'error');
+                return;
+            }
+            
+            // Only validate category for expense transactions
+            if (transactionType === 'expense') {
+                const category = form.querySelector('#expense-category').value;
+                if (!category || isNaN(parseInt(category))) {
+                    e.preventDefault();
+                    showToast('Please select a valid category.', 'error');
+                    return;
+                }
+            }
+            
+            // Handle "Continue adding" checkbox
+            if (continueAdding) {
+                e.preventDefault(); // Prevent form submission
+                
+                // Create form data and add CSRF token
+                const formData = new FormData(form);
+                const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                
+                // Make AJAX request
+                fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': csrftoken
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Show success message
+                        showToast('Transaction saved successfully!', 'success');
+                        
+                        // Reset form fields but keep it open
+                        form.reset();
+                        
+                        // Reset form state
+                        document.querySelector('input[name="transaction_type"][value="expense"]').checked = true;
+                        document.getElementById('category-field').style.display = 'block';
+                        
+                        // Re-check the "Continue adding" checkbox (it was just reset)
+                        document.getElementById('continue-adding').checked = true;
+                        
+                        // Set today's date
+                        setTodayDate();
+                        
+                        // Re-focus on amount field
+                        document.getElementById('expense-amount').focus();
+                        
+                        // Update dashboard data
+                        updateDashboard(document.getElementById('date-range').value);
+                    } else {
+                        showToast('Error: ' + (data.error || 'Unknown error'), 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showToast('An error occurred. Please try again.', 'error');
+                });
+            }
+            // If continueAdding is false, the form will submit normally
+        });
     });
 
     // Dashboard Date Range Handling
@@ -338,16 +986,34 @@
         .then(response => response.json())
         .then(data => {
             // Update summary cards
-            document.querySelector('.card:nth-child(1) .card-value').textContent = `£${data.total_amount}`;
-            document.querySelector('.card:nth-child(1) .card-footer').textContent = `${data.total_count} expenses`;
+            document.getElementById('income-value').textContent = parseFloat(data.total_income).toFixed(2);
+            document.getElementById('expense-value').textContent = parseFloat(data.total_expenses).toFixed(2);
+            document.getElementById('balance-value').textContent = parseFloat(data.net_amount).toFixed(2);
+            document.getElementById('transaction-count').textContent = data.total_count;
+            
+            // Apply color to net balance based on whether it's positive or negative
+            const balanceElement = document.getElementById('balance-value').parentElement;
+            if (parseFloat(data.net_amount) < 0) {
+                balanceElement.classList.add('expense-amount');
+                balanceElement.classList.remove('income-amount');
+            } else {
+                balanceElement.classList.add('income-amount');
+                balanceElement.classList.remove('expense-amount');
+            }
             
             // Update expense list
             updateExpenseTable(data.expenses);
             
-            // Update chart
+            // Update charts
             updateExpenseChart(data.chart_data);
+            
+            // Show toast notification
+            showToast('Dashboard updated successfully', 'success');
         })
-        .catch(error => console.error('Error updating dashboard:', error));
+        .catch(error => {
+            console.error('Error updating dashboard:', error);
+            showToast('Error updating dashboard data', 'error');
+        });
     }
 
     function updateExpenseTable(expenses) {
@@ -365,6 +1031,15 @@
         // Add rows for each expense
         expenses.forEach(expense => {
             const row = document.createElement('tr');
+            
+            // Set different styling for income vs expenses
+            let amountDisplay = '';
+            if (expense.transaction_type === 'income') {
+                amountDisplay = `<span class="income-amount">+£${parseFloat(expense.amount).toFixed(2)}</span>`;
+            } else {
+                amountDisplay = `<span class="expense-amount">-£${parseFloat(expense.amount).toFixed(2)}</span>`;
+            }
+            
             row.innerHTML = `
                 <td>${expense.date}</td>
                 <td>${expense.name}</td>
@@ -373,7 +1048,7 @@
                         ${expense.category_name}
                     </span>
                 </td>
-                <td>£${expense.amount}</td>
+                <td>${amountDisplay}</td>
                 <td>
                     <button class="action-btn edit-btn" onclick="editExpense(${expense.id})">Edit</button>
                     <button class="action-btn delete-btn" onclick="deleteExpense(${expense.id})">Delete</button>
@@ -381,76 +1056,6 @@
             `;
             tableBody.appendChild(row);
         });
-    }
-
-    // Initialize the expense distribution chart
-    function createExpenseChart() {
-        const ctx = document.getElementById('expenseChart').getContext('2d');
-        window.expenseChart = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: [],
-                datasets: [{
-                    data: [],
-                    backgroundColor: [],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'right'
-                    },
-                    title: {
-                        display: true,
-                        text: 'Expense Distribution by Category'
-                    }
-                }
-            }
-        });
-    }
-
-    // Update the chart with new data
-    function updateExpenseChart(chartData) {
-        window.expenseChart.data.labels = chartData.labels;
-        window.expenseChart.data.datasets[0].data = chartData.data;
-        window.expenseChart.data.datasets[0].backgroundColor = chartData.colors;
-        window.expenseChart.update();
-    }
-    
-    function editExpense(id) {
-        // Handle edit functionality
-        console.log('Edit expense:', id);
-        // Implement this later
-    }
-    
-    function deleteExpense(id) {
-        if (confirm('Are you sure you want to delete this expense?')) {
-            // Get CSRF token
-            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-            
-            fetch(`/delete-expense/${id}/`, {
-                method: 'POST',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRFToken': csrftoken
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Expense deleted successfully!');
-                    // Refresh dashboard
-                    const dateRange = document.getElementById('date-range').value;
-                    updateDashboard(dateRange);
-                } else {
-                    alert('Error: ' + data.error);
-                }
-            })
-            .catch(error => console.error('Error:', error));
-        }
     }
 </script>
 {% endblock %}

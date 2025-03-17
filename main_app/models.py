@@ -2,6 +2,10 @@ from django.db import models
 from django.contrib.auth.models import User
 
 STATUS = ((0, "Draft"), (1, "Added to Budget"))
+TRANSACTION_TYPE = (
+    ('expense', 'Expense'),
+    ('income', 'Income')
+)
 
 # Create your models here.
 
@@ -25,6 +29,11 @@ class Expense(models.Model):
         null=True,
         related_name='expenses'
     )
+    transaction_type = models.CharField(
+        max_length=7, 
+        choices=TRANSACTION_TYPE,
+        default='expense'
+    )
     author = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='expenses_inputs'
     )
@@ -36,4 +45,5 @@ class Expense(models.Model):
         ordering = ["-created_at"]
 
     def __str__(self):
-        return f"Budget item: {self.name} (${self.amount}) - Added by {self.author}"
+        transaction_symbol = '-' if self.transaction_type == 'expense' else '+'
+        return f"{self.transaction_type.title()}: {self.name} ({transaction_symbol}£{self.amount}) - Added by {self.author}"

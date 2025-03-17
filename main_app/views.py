@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.views import generic
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse, FileResponse
 from django.contrib.auth.decorators import login_required
 from .models import Expense, Category
 import json
@@ -12,6 +12,14 @@ from datetime import datetime, timedelta
 from calendar import monthrange
 from django.db.models import Sum
 from django.views.decorators.http import require_POST
+from django.template.loader import render_to_string
+import tempfile
+from io import BytesIO
+try:
+    from weasyprint import HTML, CSS
+    WEASYPRINT_AVAILABLE = True
+except ImportError:
+    WEASYPRINT_AVAILABLE = False
 
 # Create your views here.
 
@@ -34,21 +42,35 @@ def home(request):
         today = datetime.today()
         first_day = datetime(today.year, today.month, 1).date()
         last_day = today.date()
-        expenses = Expense.objects.filter(
+        transactions = Expense.objects.filter(
             author=request.user,
             date__range=[first_day, last_day]
         ).order_by('-date')
         
+        # Separate expenses and income
+        expenses = transactions.filter(transaction_type='expense')
+        income = transactions.filter(transaction_type='income')
+        
         # Get summary data
-        total_amount = expenses.aggregate(Sum('amount'))['amount__sum'] or 0
-        total_count = expenses.count()
+        total_expenses = expenses.aggregate(Sum('amount'))['amount__sum'] or 0
+        total_income = income.aggregate(Sum('amount'))['amount__sum'] or 0
+        net_amount = float(total_income) - float(total_expenses)
+        
+        # Format to two decimal places
+        total_expenses = round(float(total_expenses), 2)
+        total_income = round(float(total_income), 2)
+        net_amount = round(net_amount, 2)
+        total_count = transactions.count()
         
         # Get chart data
         chart_data = get_chart_data(request.user, first_day, last_day)
     else:
         # For anonymous users, don't show any expenses
-        expenses = Expense.objects.none()
+        transactions = Expense.objects.none()
         total_amount = 0
+        total_income = 0
+        total_expenses = 0
+        net_amount = 0
         total_count = 0
         chart_data = {
             'labels': [],
@@ -59,9 +81,12 @@ def home(request):
     categories = Category.objects.all()
     
     context = {
-        'expenses': expenses,
+        'expenses': transactions,
         'categories': categories,
-        'total_amount': total_amount,
+        'total_amount': total_expenses,
+        'total_income': total_income,
+        'total_expenses': total_expenses,
+        'net_amount': net_amount,
         'total_count': total_count,
         'chart_data': chart_data
     }
@@ -79,19 +104,21 @@ def add_expense(request):
     if request.method == 'POST':
         amount = request.POST.get('amount')
         description = request.POST.get('description')
-        category_id = request.POST.get('category')
         date = request.POST.get('date')
+        transaction_type = request.POST.get('transaction_type', 'expense')  # Default to expense
       
-        # Debugging output
-        print(f"POST data: amount={amount}, description={description}, category_id={category_id}, date={date}")
-        
-        # Validate data
-        if not all([amount, description, date]):
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return JsonResponse({'success': False, 'error': 'Missing required fields'})
-            return redirect('home')
-          
-        try:
+        # Get or create the Income category for income transactions
+        if transaction_type == 'income':
+            category, _ = Category.objects.get_or_create(
+                name='Income',
+                defaults={'color': '#4CAF50'}  # Green color for income
+            )
+        else:
+            # For expenses, process the category as before
+            category_id = request.POST.get('category')
+            # Debugging output
+            print(f"POST data: amount={amount}, description={description}, category_id={category_id}, date={date}, transaction_type={transaction_type}")
+            
             # Don't even try to use a non-numeric category ID
             if not category_id or not category_id.isdigit():
                 # Just use the "Other" category directly
@@ -113,18 +140,26 @@ def add_expense(request):
                         defaults={'color': '#FF5722'}
                     )
                     print(f"Fallback to Other category (ID: {category.id})")
-                
-            # Create the expense with exact field names from the model
+        
+        # Validate required data
+        if not all([amount, description, date]):
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'success': False, 'error': 'Missing required fields'})
+            return redirect('home')
+          
+        try:
+            # Create the expense/income transaction
             expense = Expense.objects.create(
                 name=description,
                 amount=float(amount),
                 date=date,
-                category=category,  # This is a Category object, not an ID
+                category=category,
+                transaction_type=transaction_type,
                 author=request.user,
                 content=description,
                 status=1
             )
-            print(f"Created expense: {expense.name} (ID: {expense.id})")
+            print(f"Created {transaction_type}: {expense.name} (ID: {expense.id})")
 
             # Check if this is an AJAX request
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -182,44 +217,132 @@ def update_dashboard(request):
         end_date = today.date()
     
     # Get expenses for the selected date range
-    expenses = Expense.objects.filter(
+    transactions = Expense.objects.filter(
         author=request.user,
         date__range=[start_date, end_date]
-    ).order_by('-date')
+    )
+    
+    # Separate expenses and income
+    expenses = transactions.filter(transaction_type='expense')
+    income = transactions.filter(transaction_type='income')
     
     # Get summary data
-    total_amount = expenses.aggregate(Sum('amount'))['amount__sum'] or 0
-    total_count = expenses.count()
+    total_expenses = expenses.aggregate(Sum('amount'))['amount__sum'] or 0
+    total_income = income.aggregate(Sum('amount'))['amount__sum'] or 0
+    net_amount = float(total_income) - float(total_expenses)
+    
+    total_expenses = round(float(total_expenses), 2)
+    total_income = round(float(total_income), 2)
+    net_amount = round(net_amount, 2)
+    total_count = transactions.count()
     
     # Get chart data
     chart_data = get_chart_data(request.user, start_date, end_date)
+    chart_data['total_income'] = total_income
+    chart_data['total_expenses'] = total_expenses
+    chart_data['net_amount'] = net_amount
     
-    # Format expenses for JSON response
-    expense_list = []
-    for expense in expenses:
-        expense_list.append({
-            'id': expense.id,
-            'name': expense.name,
-            'amount': str(expense.amount),
-            'date': expense.date.strftime('%Y-%m-%d'),
-            'category_name': expense.category.name if expense.category else 'Uncategorized',
-            'category_color': expense.category.color if expense.category else '#777777'
+    # Format transactions for JSON response
+    transaction_list = []
+    for transaction in transactions.order_by('-date'):
+        transaction_list.append({
+            'id': transaction.id,
+            'name': transaction.name,
+            'amount': f"{float(transaction.amount):.2f}",
+            'date': transaction.date.strftime('%Y-%m-%d'),
+            'category_name': transaction.category.name if transaction.category else 'Uncategorized',
+            'category_color': transaction.category.color if transaction.category else '#777777',
+            'transaction_type': transaction.transaction_type
         })
     
     # Return the data as JSON
     return JsonResponse({
-        'total_amount': str(total_amount),
+        'total_amount': f"{net_amount:.2f}",  # Changed to return net_amount for total
+        'total_expenses': f"{total_expenses:.2f}",
+        'total_income': f"{total_income:.2f}",
+        'net_amount': f"{net_amount:.2f}",
         'total_count': total_count,
-        'expenses': expense_list,
+        'expenses': transaction_list,
         'chart_data': chart_data
     })
 
+@login_required
+def get_expense(request, expense_id):
+    """Get expense data for editing"""
+    try:
+        expense = Expense.objects.get(id=expense_id, author=request.user)
+        expense_data = {
+            'id': expense.id,
+            'name': expense.name,
+            'amount': float(expense.amount),
+            'date': expense.date.strftime('%Y-%m-%d'),
+            'category_id': expense.category.id if expense.category else '',
+            'transaction_type': expense.transaction_type
+        }
+        return JsonResponse({'success': True, 'expense': expense_data})
+    except Expense.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Expense not found'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+@login_required
+def update_expense(request):
+    """Update an existing expense"""
+    if request.method == 'POST':
+        try:
+            expense_id = request.POST.get('expense_id')
+            if not expense_id:
+                return JsonResponse({'success': False, 'error': 'No expense ID provided'})
+                
+            expense = Expense.objects.get(id=expense_id, author=request.user)
+            
+            # Update fields
+            expense.name = request.POST.get('description', expense.name)
+            expense.amount = float(request.POST.get('amount', expense.amount))
+            expense.date = request.POST.get('date', expense.date)
+            expense.transaction_type = request.POST.get('transaction_type', expense.transaction_type)
+            
+            # Handle category based on transaction type
+            if expense.transaction_type == 'income':
+                category, _ = Category.objects.get_or_create(
+                    name='Income', 
+                    defaults={'color': '#4CAF50'}
+                )
+                expense.category = category
+            else:
+                category_id = request.POST.get('category')
+                if category_id and category_id.isdigit():
+                    try:
+                        category = Category.objects.get(id=int(category_id))
+                        expense.category = category
+                    except Category.DoesNotExist:
+                        # Keep existing category if invalid
+                        pass
+                        
+            expense.save()
+            
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'success': True})
+                
+            return redirect('home')
+            
+        except Expense.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Expense not found'})
+        except Exception as e:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'success': False, 'error': str(e)})
+            return redirect('home')
+    
+    # GET requests not supported
+    return redirect('home')
+
 def get_chart_data(user, start_date, end_date):
     """Generate chart data for expense distribution by category"""
-    # Get expenses grouped by category
+    # Get expenses grouped by category (only expenses, not income)
     expenses_by_category = Expense.objects.filter(
         author=user,
-        date__range=[start_date, end_date]
+        date__range=[start_date, end_date],
+        transaction_type='expense'  # Only include expenses in the pie chart
     ).values('category__name', 'category__color').annotate(
         total_amount=Sum('amount')
     ).order_by('-total_amount')
@@ -229,10 +352,18 @@ def get_chart_data(user, start_date, end_date):
     data = []
     colors = []
     
+    # Check if there are any expenses
+    if not expenses_by_category:
+        return {
+            'labels': ['No expenses'],
+            'data': [0],
+            'colors': ['#cccccc']
+        }
+    
     for item in expenses_by_category:
         category_name = item['category__name'] if item['category__name'] else 'Uncategorized'
         labels.append(category_name)
-        data.append(str(item['total_amount']))
+        data.append(f"{float(item['total_amount']):.2f}")  # Format to 2 decimal places
         colors.append(item['category__color'] if item['category__color'] else '#777777')
     
     return {
@@ -321,3 +452,122 @@ def register(request):
     
     # For GET requests, just redirect to home page which has the register form
     return redirect('home')
+
+@login_required
+def generate_report(request):
+    """Generate a PDF or HTML report for a time period"""
+    if request.method == 'POST':
+        title = request.POST.get('title', 'Financial Report')
+        period = request.POST.get('period', 'current-month')
+        report_format = request.POST.get('format', 'html')
+        
+        # Get the date range
+        start_date, end_date = get_date_range_from_period(period, request)
+        
+        # Get expense data for the period
+        transactions = Expense.objects.filter(
+            author=request.user, 
+            date__range=[start_date, end_date]
+        ).order_by('-date')
+        
+        # Separate expenses and income
+        expenses = transactions.filter(transaction_type='expense')
+        income = transactions.filter(transaction_type='income')
+        
+        # Calculate summaries
+        total_expenses = expenses.aggregate(Sum('amount'))['amount__sum'] or 0
+        total_income = income.aggregate(Sum('amount'))['amount__sum'] or 0
+        net_amount = float(total_income) - float(total_expenses)
+        
+        # Format to two decimal places
+        total_expenses = round(float(total_expenses), 2)
+        total_income = round(float(total_income), 2)
+        net_amount = round(net_amount, 2)
+        
+        # Get include options
+        include_summary = request.POST.get('include_summary') == 'on'
+        include_charts = request.POST.get('include_charts') == 'on'
+        include_transactions = request.POST.get('include_transactions') == 'on'
+        
+        # Prepare chart data
+        chart_data = None
+        if include_charts:
+            chart_data = get_chart_data(request.user, start_date, end_date)
+        
+        # Prepare context for template
+        context = {
+            'title': title,
+            'start_date': start_date,
+            'end_date': end_date,
+            'transactions': transactions,
+            'total_income': total_income,
+            'total_expenses': total_expenses,
+            'net_amount': net_amount,
+            'transaction_count': transactions.count(),
+            'include_summary': include_summary,
+            'include_charts': include_charts,
+            'include_transactions': include_transactions,
+            'chart_data': chart_data,
+            'generated_at': datetime.now(),
+            'user': request.user,
+        }
+        
+        # Generate the report
+        if report_format == 'html':
+            # Return HTML report
+            return render(request, 'main_app/report.html', context)
+        elif report_format == 'pdf' and WEASYPRINT_AVAILABLE:
+            # Generate PDF using WeasyPrint
+            html_string = render_to_string('main_app/report.html', context)
+            html = HTML(string=html_string, base_url=request.build_absolute_uri())
+            
+            # Create a PDF file
+            result = html.write_pdf()
+            
+            # Create response with PDF
+            response = HttpResponse(result, content_type='application/pdf')
+            response['Content-Disposition'] = f'attachment; filename="{title.replace(" ", "_")}.pdf"'
+            return response
+        else:
+            # Fallback to HTML if PDF generation is not available
+            return render(request, 'main_app/report.html', context)
+    
+    # Redirect to home if not POST
+    return redirect('home')
+
+def get_date_range_from_period(period, request):
+    """Convert a period name to start and end dates"""
+    today = datetime.today()
+    
+    if period == 'current-month':
+        start_date = datetime(today.year, today.month, 1).date()
+        end_date = today.date()
+    elif period == 'last-month':
+        last_month = today.month - 1 if today.month > 1 else 12
+        last_month_year = today.year if today.month > 1 else today.year - 1
+        _, last_day = monthrange(last_month_year, last_month)
+        start_date = datetime(last_month_year, last_month, 1).date()
+        end_date = datetime(last_month_year, last_month, last_day).date()
+    elif period == 'last-3-months':
+        start_date = (today - timedelta(days=90)).date()
+        end_date = today.date()
+    elif period == 'last-6-months':
+        start_date = (today - timedelta(days=180)).date()
+        end_date = today.date()
+    elif period == 'year-to-date':
+        start_date = datetime(today.year, 1, 1).date()
+        end_date = today.date()
+    elif period == 'custom':
+        try:
+            start_date = datetime.strptime(request.POST.get('start_date'), '%Y-%m-%d').date()
+            end_date = datetime.strptime(request.POST.get('end_date'), '%Y-%m-%d').date()
+        except (ValueError, TypeError):
+            # Default to current month if dates are invalid
+            start_date = datetime(today.year, today.month, 1).date()
+            end_date = today.date()
+    else:
+        # Default to current month
+        start_date = datetime(today.year, today.month, 1).date()
+        end_date = today.date()
+        
+    return start_date, end_date
