@@ -1,7 +1,7 @@
 {% extends "account/base.html" %}
 {% load i18n %}
 
-{% block head_title %}{% trans "Signup" %}{% endblock %}
+{% block title %}{% trans "Signup" %}{% endblock %}
 
 {% block inner_content %}
 <div class="container">
@@ -20,11 +20,13 @@
             {{ form.email }}
             {{ form.email.errors }}
         </div>
+        {% if form.email2 %}
         <div class="form-group">
             <label for="id_email2">{% trans "Email (again)" %}</label>
             {{ form.email2 }}
             {{ form.email2.errors }}
         </div>
+        {% endif %}
         <div class="form-group">
             <label for="id_password1">{% trans "Password" %}</label>
             {{ form.password1 }}
@@ -44,7 +46,7 @@
     </form>
 
     <div class="form-toggle">
-        <p>{% blocktrans %}Already have an account? <a href="{{ login_url }}">Sign In</a>{% endblocktrans %}</p>
+        <p>Already have an account? <a href="{% url 'account_login' %}">Sign In</a></p>
     </div>
 </div>
 {% endblock %}

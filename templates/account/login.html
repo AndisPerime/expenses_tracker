@@ -37,7 +37,7 @@
     </form>
 
     <div class="form-toggle">
-        <p>{% trans "Don't have an account yet?" %} <a href="{{ signup_url }}">{% trans "Sign up" %}</a></p>
+        <p>{% trans "Don't have an account yet?" %} <a href="{% url 'account_signup' %}">{% trans "Sign up" %}</a></p>
     </div>
 </div>
 {% endblock %}

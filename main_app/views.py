@@ -393,42 +393,23 @@ def delete_expense(request, expense_id):
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
 
+# Remove or comment out the login and register functions to avoid conflicts with AllAuth
+"""
 def user_login(request):
-    if request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
-        
-        # Check if either field is empty
-        if not username or not password:
-            messages.error(request, 'Please enter both username and password')
-            return redirect('home')
-            
-        # Check if the user exists first
-        try:
-            user_exists = User.objects.filter(username=username).exists()
-            if not user_exists:
-                messages.error(request, f'No account found with username: {username}')
-                return redirect('home')
-        except Exception as e:
-            print(f"Error checking user existence: {str(e)}")
-            
-        # Try to authenticate the user
-        user = authenticate(request, username=username, password=password)
-        
-        if user is not None:
-            login(request, user)
-            messages.success(request, f"Welcome back, {username}!")
-            return redirect('home')
-        else:
-            messages.error(request, 'Incorrect password. Please try again.')
-            return redirect('home')
-    
-    # For GET requests, just redirect to home page which has the login form
-    return redirect('home')
+    # This function conflicts with allauth's login
+    # ...existing code...
+    pass
 
+def register(request):
+    # This function conflicts with allauth's signup
+    # ...existing code...
+    pass
+"""
+
+# Keep the logout function but redirect to allauth's logout
 def user_logout(request):
     logout(request)
-    return redirect('home')
+    return redirect('account_logout')
 
 def register(request):
     if request.method == 'POST':

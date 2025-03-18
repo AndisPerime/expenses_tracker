@@ -1016,3 +1016,94 @@ input[type="radio"]:checked + .radio-label.income {
     box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.25);
     outline: none;
 }
+
+/* Add auth form styling */
+.auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: calc(100vh - 150px);
+    width: 100%;
+}
+
+.auth-form {
+    width: 100%;
+    max-width: 450px;
+    padding: 30px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.auth-form h2 {
+    text-align: center;
+    margin-bottom: 25px;
+    color: #333;
+}
+
+.auth-form .form-group {
+    margin-bottom: 20px;
+}
+
+.auth-form input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.auth-form .errorlist {
+    color: #f44336;
+    margin-top: 5px;
+    font-size: 14px;
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.auth-form .form-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 30px;
+}
+
+.auth-form .form-actions a {
+    color: #666;
+    text-decoration: none;
+}
+
+.auth-form .form-actions a:hover {
+    text-decoration: underline;
+    color: #333;
+}
+
+.auth-form .form-toggle {
+    text-align: center;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+
+.auth-form .form-toggle a {
+    color: #4CAF50;
+    text-decoration: none;
+}
+
+.auth-form .form-toggle a:hover {
+    text-decoration: underline;
+}
+
+.auth-form .btn {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.auth-form .btn:hover {
+    background-color: #45a049;
+}

@@ -21,12 +21,12 @@
                 <li class="user-menu">
                     <a href="#">{{ user.username }}</a>
                     <div class="dropdown-menu">
-                        <a href="{{ logout_url }}">Logout</a>
+                        <a href="{% url 'account_logout' %}">Logout</a>
                     </div>
                 </li>
                 {% else %}
-                <li><a href="{{ login_url }}">Login</a></li>
-                <li><a href="{{ signup_url }}">Sign Up</a></li>
+                <li><a href="{% url 'account_login' %}">Login</a></li>
+                <li><a href="{% url 'account_signup' %}">Sign Up</a></li>
                 {% endif %}
             </ul>
         </nav>
@@ -39,8 +39,8 @@
                     <h1>Welcome to Expenses Tracker</h1>
                     <p>The simple way to track your expenses and manage your finances.</p>
                     <div class="welcome-buttons">
-                        <a href="{{ login_url }}" class="btn">Login</a>
-                        <a href="{{ signup_url }}" class="btn btn-outline">Sign Up</a>
+                        <a href="{% url 'account_login' %}" class="btn">Login</a>
+                        <a href="{% url 'account_signup' %}" class="btn btn-outline">Sign Up</a>
                     </div>
                 </div>
             </div>
