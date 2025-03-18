@@ -29,7 +29,7 @@ SECRET_KEY = (
     )
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True  # Set to True for development to serve static files
+DEBUG = False  # Set to True for development to serve static files
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.herokuapp.com']
 
