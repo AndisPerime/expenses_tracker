@@ -20,6 +20,7 @@ from main_app import views as main_views
 
 urlpatterns = [
     path('', include("main_app.urls"), name='home'),
+    path('accounts/', include('allauth.urls')),  # AllAuth URLs properly configured
     path('admin/', admin.site.urls),
     path('add-expense/', main_views.add_expense, name='add_expense'),
 ]

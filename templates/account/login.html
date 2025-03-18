@@ -1,0 +1,43 @@
+{% extends "account/base.html" %}
+{% load i18n %}
+{% load account socialaccount %}
+
+{% block head_title %}{% trans "Sign In" %}{% endblock %}
+
+{% block inner_content %}
+<div class="container">
+    <h2>{% trans "Sign In" %}</h2>
+
+    {% get_providers as socialaccount_providers %}
+
+    <form class="login" method="POST" action="{% url 'account_login' %}">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        <div class="form-group">
+            <label for="id_login">{% trans "Username or Email" %}</label>
+            {{ form.login }}
+            {{ form.login.errors }}
+        </div>
+        <div class="form-group">
+            <label for="id_password">{% trans "Password" %}</label>
+            {{ form.password }}
+            {{ form.password.errors }}
+        </div>
+        <div class="form-group checkbox-group">
+            {{ form.remember }}
+            <label for="id_remember">{% trans "Remember Me" %}</label>
+        </div>
+        {% if redirect_field_value %}
+            <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+        {% endif %}
+        <div class="form-actions">
+            <a href="{% url 'account_reset_password' %}">{% trans "Forgot Password?" %}</a>
+            <button class="btn" type="submit">{% trans "Sign In" %}</button>
+        </div>
+    </form>
+
+    <div class="form-toggle">
+        <p>{% trans "Don't have an account yet?" %} <a href="{{ signup_url }}">{% trans "Sign up" %}</a></p>
+    </div>
+</div>
+{% endblock %}
