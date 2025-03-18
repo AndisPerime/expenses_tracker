@@ -18,6 +18,7 @@
             <ul class="nav-menu">
                 <li><a href="{% url 'home' %}">Dashboard</a></li>
                 {% if user.is_authenticated %}
+                <li><a href="{% url 'budget_dashboard' %}">Budget</a></li>
                 <li class="user-menu">
                     <a href="#">{{ user.username }}</a>
                     <div class="dropdown-menu">
@@ -63,7 +64,7 @@
     </main>
 
     <footer>
-        <p>&copy; {% now "Y" %} Expenses Tracker. All rights reserved.</p>
+        <p>&copy; {% now "Y" %} Expenses Tracker by AndisPerime. All rights reserved.</p>
     </footer>
 
     <script>

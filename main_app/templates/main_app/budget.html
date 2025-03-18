@@ -1,0 +1,359 @@
+{% extends "home.html" %}
+{% load static %}
+{% load budget_extras %}  <!-- Load our custom template filters -->
+
+{% block title %}Budget Management - Expenses Tracker{% endblock %}
+
+{% block extra_css %}
+<!-- Add Chart.js library -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <div class="dashboard-header">
+        <h1>Budget Dashboard</h1>
+        <div class="month-selector">
+            <span class="current-period">{{ month }} {{ year }}</span>
+            <div class="period-controls">
+                <button class="btn btn-small" id="prev-month">&lt; Previous</button>
+                <button class="btn btn-small" id="next-month">Next &gt;</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="summary-cards">
+        <div class="card budget-overview-card">
+            <div class="card-header">Monthly Budget</div>
+            <div class="card-value">£<span id="total-budget">{{ total_budget|floatformat:2 }}</span></div>
+            <div class="budget-progress-container">
+                <div class="budget-progress-bar" style="width: {{ total_spent|percentage_of:total_budget }}%"></div>
+            </div>
+            <div class="card-footer">
+                <span>£{{ total_spent|floatformat:2 }} spent ({{ total_spent|percentage_of:total_budget|floatformat:0 }}%)</span>
+            </div>
+        </div>
+        
+        <div class="card month-progress-card">
+            <div class="card-header">Month Progress</div>
+            <div class="card-value">{{ month_progress }}%</div>
+            <div class="budget-progress-container">
+                <div class="budget-progress-bar" style="width: {{ month_progress }}%"></div>
+            </div>
+            <div class="card-footer">
+                <span>Month is {{ month_progress }}% complete</span>
+            </div>
+        </div>
+        
+        <div class="card budget-status-card">
+            <div class="card-header">Budget Status</div>
+            <div class="card-value {% if total_spent > total_budget %}over-budget{% else %}under-budget{% endif %}">
+                {% if total_spent > total_budget %}
+                    Over Budget
+                {% else %}
+                    Under Budget
+                {% endif %}
+            </div>
+            <div class="card-footer">
+                <span>£{{ total_budget|subtract:total_spent|floatformat:2 }} {% if total_spent > total_budget %}over{% else %}remaining{% endif %}</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="budget-container">
+        <div class="budget-table-section">
+            <div class="section-header">
+                <h2>Category Budgets</h2>
+                <button class="btn" onclick="showBudgetModal()">Set Budgets</button>
+            </div>
+            
+            <table class="budget-table">
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Budget</th>
+                        <th>Spent</th>
+                        <th>Remaining</th>
+                        <th>Progress</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in budget_data %}
+                    <tr>
+                        <td>
+                            <span class="category-badge" style="background-color: {{ item.category.color }}">
+                                {{ item.category.name }}
+                            </span>
+                        </td>
+                        <td>£{{ item.amount|floatformat:2 }}</td>
+                        <td>£{{ item.spent|floatformat:2 }}</td>
+                        <td class="{% if item.remaining < 0 %}negative{% else %}positive{% endif %}">
+                            £{{ item.remaining|floatformat:2 }}
+                        </td>
+                        <td>
+                            <div class="progress-bar-container">
+                                <div class="progress-bar {% if item.percentage > 100 %}danger{% elif item.percentage > 80 %}warning{% else %}success{% endif %}" 
+                                     style="width: {{ item.percentage }}%">
+                                </div>
+                                <span class="progress-text">{{ item.percentage }}%</span>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="no-data">No budget data available. Set your first budget to start tracking!</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="budget-charts-section">
+            <div class="chart-card">
+                <h3>Budget vs Spending by Category</h3>
+                <div class="chart-container">
+                    <canvas id="budgetComparisonChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="chart-card">
+                <h3>Spending Distribution</h3>
+                <div class="chart-container">
+                    <canvas id="spendingDistributionChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Budget Setting Modal -->
+<div id="budget-modal" class="modal">
+    <div class="modal-content budget-modal">
+        <span class="close-button" onclick="hideBudgetModal()">&times;</span>
+        <h2>Set Category Budgets</h2>
+        <form id="budget-form" action="{% url 'update_budget' %}" method="post">
+            {% csrf_token %}
+            <input type="hidden" id="budget-year" name="year" value="{{ year }}">
+            <input type="hidden" id="budget-month" name="month" value="{{ current_month }}">
+            <input type="hidden" name="period" value="monthly">
+            
+            <div class="form-group">
+                <label for="budget-category">Category</label>
+                <select id="budget-category" name="category_id" required>
+                    <option value="">Select a category</option>
+                    {% for category in categories %}
+                        <option value="{{ category.id }}">{{ category.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="budget-amount">Monthly Budget Amount (£)</label>
+                <input type="number" id="budget-amount" name="amount" step="0.01" min="0" required>
+            </div>
+            
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="hideBudgetModal()">Cancel</button>
+                <button type="submit" class="btn" id="submit-budget-btn">Save Budget</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Initialize budget charts
+    document.addEventListener('DOMContentLoaded', function() {
+        createBudgetCharts();
+        loadBudgetData();
+        
+        // Add event listeners for month navigation
+        document.getElementById('prev-month').addEventListener('click', function() {
+            navigateMonth(-1);
+        });
+        
+        document.getElementById('next-month').addEventListener('click', function() {
+            navigateMonth(1);
+        });
+    });
+    
+    function createBudgetCharts() {
+        // Budget comparison chart
+        const comparisonCtx = document.getElementById('budgetComparisonChart').getContext('2d');
+        window.budgetComparisonChart = new Chart(comparisonCtx, {
+            type: 'bar',
+            data: {
+                labels: [],
+                datasets: [
+                    {
+                        label: 'Budget',
+                        data: [],
+                        backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Spent',
+                        data: [],
+                        backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return '£' + value;
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                label += '£' + context.parsed.y.toFixed(2);
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Spending distribution chart
+        const distributionCtx = document.getElementById('spendingDistributionChart').getContext('2d');
+        window.spendingDistributionChart = new Chart(distributionCtx, {
+            type: 'doughnut',
+            data: {
+                labels: [],
+                datasets: [{
+                    data: [],
+                    backgroundColor: [],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            boxWidth: 12,
+                            padding: 10,
+                            font: {
+                                size: 11
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.parsed || 0;
+                                return `${label}: £${value.toFixed(2)}`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    function loadBudgetData() {
+        const year = document.getElementById('budget-year').value;
+        const month = document.getElementById('budget-month').value;
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        
+        fetch('/get-budget-data/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify({
+                year: year,
+                month: month
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                updateBudgetComparisonChart(data);
+                updateSpendingDistributionChart(data);
+            } else {
+                console.error('Error loading budget data:', data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching budget data:', error);
+        });
+    }
+    
+    function updateBudgetComparisonChart(data) {
+        window.budgetComparisonChart.data.labels = data.labels;
+        window.budgetComparisonChart.data.datasets[0].data = data.budget_amounts;
+        window.budgetComparisonChart.data.datasets[1].data = data.spent_amounts;
+        window.budgetComparisonChart.update();
+    }
+    
+    function updateSpendingDistributionChart(data) {
+        window.spendingDistributionChart.data.labels = data.labels;
+        window.spendingDistributionChart.data.datasets[0].data = data.spent_amounts;
+        window.spendingDistributionChart.data.datasets[0].backgroundColor = data.colors;
+        window.spendingDistributionChart.update();
+    }
+    
+    function navigateMonth(direction) {
+        // Get current year and month
+        let year = parseInt(document.getElementById('budget-year').value);
+        let month = parseInt(document.getElementById('budget-month').value);
+        
+        // Calculate new month and year
+        month += direction;
+        
+        if (month > 12) {
+            month = 1;
+            year++;
+        } else if (month < 1) {
+            month = 12;
+            year--;
+        }
+        
+        // Redirect to the new month
+        window.location.href = `/budget/?year=${year}&month=${month}`;
+    }
+    
+    function showBudgetModal() {
+        document.getElementById('budget-modal').classList.add('show');
+        document.body.style.overflow = 'hidden';
+    }
+    
+    function hideBudgetModal() {
+        document.getElementById('budget-modal').classList.remove('show');
+        document.body.style.overflow = '';
+        document.getElementById('budget-form').reset();
+    }
+    
+    // Handle modal close when clicking outside
+    window.onclick = function(event) {
+        const modal = document.getElementById('budget-modal');
+        if (event.target == modal) {
+            hideBudgetModal();
+        }
+    }
+</script>
+{% endblock %}

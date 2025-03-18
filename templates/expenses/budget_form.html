@@ -1,0 +1,18 @@
+{% extends 'home.html' %}
+
+{% block title %}
+  {% if budget %}Edit Budget{% else %}New Budget{% endif %} | {{ block.super }}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>{% if budget %}Edit Budget{% else %}New Budget{% endif %}</h2>
+    
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Save</button>
+        <a href="{% url 'budget_list' %}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}

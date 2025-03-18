@@ -139,13 +139,14 @@ AUTHENTICATION_BACKENDS = [
     'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
-# AllAuth Configuration
-ACCOUNT_AUTHENTICATION_METHOD = 'username_email'  # Allow login with username or email
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_EMAIL_VERIFICATION = 'optional'  # Can be 'mandatory', 'optional', or 'none'
+SITE_ID = 1  # new
+
+# AllAuth Configuration - updating important settings
+ACCOUNT_AUTHENTICATION_METHOD = 'username'  # Changed from username_email for simplicity
+ACCOUNT_EMAIL_REQUIRED = False  # Changed to False to simplify account creation
+ACCOUNT_EMAIL_VERIFICATION = 'none'  # Keep as none to avoid email verification
 ACCOUNT_USERNAME_REQUIRED = True
-ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 7
-ACCOUNT_SIGNUP_EMAIL_ENTER_TWICE = True  # Require email to be entered twice during signup
+ACCOUNT_SIGNUP_EMAIL_ENTER_TWICE = False  # Changed to False to simplify signup form
 ACCOUNT_LOGOUT_ON_PASSWORD_CHANGE = True
 
 # Login and Redirect URLs

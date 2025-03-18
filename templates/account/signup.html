@@ -1,7 +1,7 @@
 {% extends "account/base.html" %}
 {% load i18n %}
 
-{% block title %}{% trans "Signup" %}{% endblock %}
+{% block head_title %}{% trans "Sign Up" %}{% endblock %}
 
 {% block inner_content %}
 <div class="container">
@@ -9,37 +9,38 @@
 
     <form class="signup" id="signup_form" method="post" action="{% url 'account_signup' %}">
         {% csrf_token %}
-        {{ form.non_field_errors }}
-        <div class="form-group">
-            <label for="id_username">{% trans "Username" %}</label>
-            {{ form.username }}
-            {{ form.username.errors }}
-        </div>
-        <div class="form-group">
-            <label for="id_email">{% trans "Email" %}</label>
-            {{ form.email }}
-            {{ form.email.errors }}
-        </div>
-        {% if form.email2 %}
-        <div class="form-group">
-            <label for="id_email2">{% trans "Email (again)" %}</label>
-            {{ form.email2 }}
-            {{ form.email2.errors }}
+        
+        {% if form.errors %}
+        <div class="form-error">
+            <p>Please correct the errors below:</p>
+            {% for error in form.non_field_errors %}
+                <p class="error">{{ error }}</p>
+            {% endfor %}
         </div>
         {% endif %}
+        
         <div class="form-group">
-            <label for="id_password1">{% trans "Password" %}</label>
-            {{ form.password1 }}
+            <label for="id_username">Username</label>
+            <input type="text" name="username" placeholder="Username" autocomplete="username" minlength="1" maxlength="150" required id="id_username">
+            {{ form.username.errors }}
+        </div>
+        
+        <div class="form-group">
+            <label for="id_password1">Password</label>
+            <input type="password" name="password1" placeholder="Password" autocomplete="new-password" required id="id_password1">
             {{ form.password1.errors }}
         </div>
+        
         <div class="form-group">
-            <label for="id_password2">{% trans "Password (again)" %}</label>
-            {{ form.password2 }}
+            <label for="id_password2">Password (again)</label>
+            <input type="password" name="password2" placeholder="Password (again)" autocomplete="new-password" required id="id_password2">
             {{ form.password2.errors }}
         </div>
+        
         {% if redirect_field_value %}
             <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
         {% endif %}
+        
         <div class="form-actions">
             <button class="btn" type="submit">{% trans "Sign Up" %}</button>
         </div>

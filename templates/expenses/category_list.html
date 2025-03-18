@@ -1,0 +1,36 @@
+{% extends 'home.html' %}
+
+{% block title %}Categories | {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Your Categories</h2>
+    <div class="actions">
+        <a href="{% url 'category_create' %}" class="btn btn-primary">Add New Category</a>
+    </div>
+    
+    {% if categories %}
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for category in categories %}
+            <tr>
+                <td>{{ category.name }}</td>
+                <td>
+                    <a href="{% url 'category_update' category.id %}" class="btn btn-sm btn-info">Edit</a>
+                    <a href="{% url 'category_delete' category.id %}" class="btn btn-sm btn-danger">Delete</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>You haven't created any categories yet. <a href="{% url 'category_create' %}">Create your first category</a>.</p>
+    {% endif %}
+</div>
+{% endblock %}

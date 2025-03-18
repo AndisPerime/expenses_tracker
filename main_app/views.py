@@ -2,7 +2,8 @@ from django.shortcuts import render, redirect
 from django.views import generic
 from django.http import JsonResponse, HttpResponse, FileResponse
 from django.contrib.auth.decorators import login_required
-from .models import Expense, Category
+from django.db import models  # Add this import for models.Sum
+from .models import Expense, Category, Budget
 import json
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import UserCreationForm
@@ -10,16 +11,22 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from datetime import datetime, timedelta
 from calendar import monthrange
-from django.db.models import Sum
+from django.db.models import Sum  # We can use this instead of models.Sum
 from django.views.decorators.http import require_POST
 from django.template.loader import render_to_string
 import tempfile
 from io import BytesIO
+from django.utils import timezone
+import calendar
+# WeasyPrint is optional for PDF generation
+# If you need PDF support, install it with: pip install weasyprint
 try:
     from weasyprint import HTML, CSS
     WEASYPRINT_AVAILABLE = True
 except ImportError:
+    # WeasyPrint is not installed
     WEASYPRINT_AVAILABLE = False
+    HTML = CSS = None
 
 # Create your views here.
 
@@ -560,3 +567,203 @@ def get_date_range_from_period(period, request):
         end_date = today.date()
         
     return start_date, end_date
+
+@login_required
+def budget_dashboard(request):
+    """Budget management dashboard view"""
+    # Get current year and month
+    today = timezone.now()
+    current_year = today.year
+    current_month = today.month
+    
+    # Get categories for the user
+    categories = Category.objects.exclude(name='Income')
+    
+    # Get user's budgets
+    monthly_budgets = Budget.objects.filter(
+        user=request.user,
+        period='monthly',
+        year=current_year,
+        month=current_month
+    ).select_related('category')
+    
+    yearly_budgets = Budget.objects.filter(
+        user=request.user,
+        period='yearly',
+        year=current_year
+    ).select_related('category')
+    
+    # Get all expenses for current month to calculate spending
+    month_expenses = Expense.objects.filter(
+        author=request.user,
+        date__year=current_year,
+        date__month=current_month,
+        transaction_type='expense'
+    )
+    
+    # Get total budget and spending
+    total_monthly_budget = sum([float(b.amount) for b in monthly_budgets])
+    total_monthly_spent = sum([float(b.get_spent_amount()) for b in monthly_budgets])
+    
+    # Budget data for each category
+    budget_data = []
+    for category in categories:
+        # Try to get existing budget for this category
+        try:
+            monthly_budget = monthly_budgets.get(category=category)
+            amount = float(monthly_budget.amount)
+            spent = float(monthly_budget.get_spent_amount())
+            remaining = float(monthly_budget.get_remaining())
+            percentage = monthly_budget.get_percentage_used()
+        except Budget.DoesNotExist:
+            # No budget exists for this category
+            amount = 0
+            spent = float(month_expenses.filter(category=category).aggregate(Sum('amount'))['amount__sum'] or 0)  # Use Sum instead of models.Sum
+            remaining = -spent
+            percentage = 100 if amount == 0 and spent > 0 else 0
+        
+        budget_data.append({
+            'category': category,
+            'amount': amount,
+            'spent': spent,
+            'remaining': remaining,
+            'percentage': percentage
+        })
+    
+    # Calculate percentage of month passed
+    _, last_day = calendar.monthrange(current_year, current_month)
+    days_in_month = last_day
+    days_passed = min(today.day, days_in_month)
+    month_progress = round((days_passed / days_in_month) * 100)
+    
+    context = {
+        'budget_data': budget_data,
+        'total_budget': total_monthly_budget,
+        'total_spent': total_monthly_spent,
+        'month': calendar.month_name[current_month],
+        'year': current_year,
+        'current_month': current_month,  # Add the month number to the context
+        'categories': categories,
+        'month_progress': month_progress
+    }
+    
+    return render(request, 'main_app/budget.html', context)
+
+@require_POST
+@login_required
+def update_budget(request):
+    """API endpoint to create or update a budget"""
+    category_id = request.POST.get('category_id')
+    amount = request.POST.get('amount')
+    period = request.POST.get('period', 'monthly')
+    
+    # Add defensive checks for year and month
+    try:
+        year = int(request.POST.get('year', timezone.now().year))
+    except (ValueError, TypeError):
+        year = timezone.now().year
+        
+    # For month, handle it differently based on period
+    if period == 'monthly':
+        try:
+            month_value = request.POST.get('month')
+            month = int(month_value) if month_value and month_value.strip() else timezone.now().month
+        except (ValueError, TypeError):
+            month = timezone.now().month
+    else:
+        month = None
+    
+    # Validate data
+    if not all([category_id, amount]) or float(amount) < 0:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'error': 'Invalid budget data'})
+        messages.error(request, 'Invalid budget data')
+        return redirect('budget_dashboard')
+    
+    try:
+        category = Category.objects.get(id=category_id)
+        # Get or create budget
+        budget, created = Budget.objects.update_or_create(
+            user=request.user,
+            category=category,
+            period=period,
+            year=year,
+            month=month if period == 'monthly' else None,
+            defaults={'amount': amount}
+        )
+        
+        # Return success
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'success': True, 
+                'budget_id': budget.id,
+                'message': 'Budget updated successfully'
+            })
+        
+        messages.success(request, f'{period.capitalize()} budget for {category.name} updated successfully')
+        return redirect('budget_dashboard')
+        
+    except Exception as e:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'error': str(e)})
+        
+        messages.error(request, f'Error updating budget: {str(e)}')
+        return redirect('budget_dashboard')
+
+@require_POST
+@login_required
+def get_budget_data(request):
+    """Get budget vs. spending data for visualizations"""
+    data = json.loads(request.body)
+    year = data.get('year', timezone.now().year)
+    month = data.get('month', timezone.now().month)
+    
+    # Get all categories
+    categories = Category.objects.exclude(name='Income')
+    
+    # Prepare data for chart
+    labels = []
+    budget_amounts = []
+    spent_amounts = []
+    colors = []
+    
+    for category in categories:
+        # Try to get budget for category
+        try:
+            budget = Budget.objects.get(
+                user=request.user,
+                category=category,
+                period='monthly',
+                year=year,
+                month=month
+            )
+            budget_amount = float(budget.amount)
+        except Budget.DoesNotExist:
+            budget_amount = 0
+        
+        # Get actual spending
+        spent = Expense.objects.filter(
+            author=request.user,
+            category=category,
+            date__year=year,
+            date__month=month,
+            transaction_type='expense'
+        ).aggregate(Sum('amount'))['amount__sum'] or 0  # Use Sum instead of models.Sum
+        
+        labels.append(category.name)
+        budget_amounts.append(budget_amount)
+        spent_amounts.append(float(spent))
+        colors.append(category.color)
+    
+    return JsonResponse({
+        'success': True,
+        'labels': labels,
+        'budget_amounts': budget_amounts,
+        'spent_amounts': spent_amounts,
+        'colors': colors
+    })
+
+def budget_view(request):
+    """View function for the budget dashboard."""
+    # Simply redirect to the budget_dashboard view
+    return budget_dashboard(request)
