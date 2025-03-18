@@ -1,3 +1,8 @@
+/* CSS Debug Marker - Remove after confirming styles are loading */
+.css-loaded-marker {
+  display: none;
+}
+
 /* Base styling */
 body {
     font-family: Arial, sans-serif;
