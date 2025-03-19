@@ -12,7 +12,6 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from pathlib import Path
 import os
-import dj_database_url
 if os.path.isfile('env.py'):
     import env  # noqa: F401 - imported for side effects
 
@@ -24,12 +23,10 @@ TEMPLATES_DIR = os.path.join(BASE_DIR, 'templates')
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = (
-    'django-insecure-n(%t4&zbzahb*0p!^ko#j5lg%lfk-d%o(0w+sb_bdh-g9yduxl'
-    )
+SECRET_KEY = os.environ.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False  # Set to True for development to serve static files
+DEBUG = True  # Set to True for development to serve static files
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.herokuapp.com']
 
@@ -142,11 +139,11 @@ AUTHENTICATION_BACKENDS = [
 SITE_ID = 1  # new
 
 # AllAuth Configuration - updating important settings
-ACCOUNT_AUTHENTICATION_METHOD = 'username'  # Changed from username_email for simplicity
+ACCOUNT_AUTHENTICATION_METHOD = 'username'
 ACCOUNT_EMAIL_REQUIRED = False  # Changed to False to simplify account creation
 ACCOUNT_EMAIL_VERIFICATION = 'none'  # Keep as none to avoid email verification
 ACCOUNT_USERNAME_REQUIRED = True
-ACCOUNT_SIGNUP_EMAIL_ENTER_TWICE = False  # Changed to False to simplify signup form
+ACCOUNT_SIGNUP_EMAIL_ENTER_TWICE = False
 ACCOUNT_LOGOUT_ON_PASSWORD_CHANGE = True
 
 # Login and Redirect URLs

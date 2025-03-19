@@ -50,6 +50,7 @@ class Expense(models.Model):
         transaction_symbol = '-' if self.transaction_type == 'expense' else '+'
         return f"{self.transaction_type.title()}: {self.name} ({transaction_symbol}£{self.amount}) - Added by {self.author}"
 
+
 class Budget(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     category = models.ForeignKey('Category', on_delete=models.CASCADE)
@@ -66,7 +67,7 @@ class Budget(models.Model):
             'category': self.category,
             'transaction_type': 'expense'
         }
-        
+
         if self.period == 'monthly':
             filter_kwargs['date__year'] = self.year
             filter_kwargs['date__month'] = self.month
