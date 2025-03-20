@@ -2257,20 +2257,7 @@ a:focus, button:focus, input:focus, select:focus {
   }
 }
 
-/* Remove these conflicting media queries since we now have clear breakpoints above */
-/* 
-@media (max-width: 992px) {
-  .mobile-menu-toggle { ... }
-  .nav-menu { ... }
-  ...
-}
-
-@media (min-width: 993px) {
-  .nav-menu { ... }
-}
-*/
-
-/* Hamburger icon styles (keep these) */
+/* Hamburger icon styles */
 .hamburger-icon {
   display: inline-block;
   width: 25px;
