@@ -96,6 +96,47 @@
             .no-print {
                 display: none;
             }
+            body {
+                font-size: 12pt;
+                margin: 0;
+                padding: 15mm;
+            }
+            
+            .report-header {
+                margin-bottom: 20mm;
+            }
+            
+            .summary-section {
+                break-inside: avoid;
+                margin-bottom: 15mm;
+            }
+            
+            .transactions-section table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            
+            .transactions-section tr {
+                break-inside: avoid;
+            }
+        }
+        
+        .print-helper {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
+        
+        .print-helper:hover {
+            background-color: #45a049;
         }
     </style>
 </head>
@@ -174,8 +215,8 @@
     </div>
     
     <div class="no-print">
-        <button onclick="window.print()">Print Report</button>
-        <a href="{% url 'home' %}">Back to Dashboard</a>
+        <button class="print-helper" onclick="window.print()">Print Report</button>
+        <a href="{% url 'home' %}" class="btn">Back to Dashboard</a>
     </div>
 </body>
 </html>

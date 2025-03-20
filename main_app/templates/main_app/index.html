@@ -1,4 +1,4 @@
-{% extends "home.html" %}
+{% extends "base.html" %}
 {% load static %}
 
 {% block title %}Dashboard - Expenses Tracker{% endblock %}
@@ -219,13 +219,7 @@
                         <label for="include-transactions">Transaction List</label>
                     </div>
                 </div>
-                <div class="form-group">
-                    <label for="report-format">Format</label>
-                    <select id="report-format" name="format">
-                        <option value="pdf">PDF</option>
-                        <option value="html">HTML</option>
-                    </select>
-                </div>
+                <input type="hidden" name="format" value="html">
                 <div class="form-actions">
                     <button type="button" class="btn btn-secondary" onclick="hideReportModal()">Cancel</button>
                     <button type="submit" class="btn">Generate Report</button>
@@ -340,10 +334,26 @@
                 if (expense.transaction_type === 'income') {
                     incomeRadio.checked = true;
                     document.getElementById('category-field').style.display = 'none';
+                    
+                    // Add hidden input for income category if it doesn't exist
+                    if (!document.getElementById('income-category-hidden')) {
+                        const hiddenInput = document.createElement('input');
+                        hiddenInput.type = 'hidden';
+                        hiddenInput.id = 'income-category-hidden';
+                        hiddenInput.name = 'category';
+                        hiddenInput.value = 'income';
+                        document.getElementById('category-field').appendChild(hiddenInput);
+                    }
                 } else {
                     expenseRadio.checked = true;
                     document.getElementById('category-field').style.display = 'block';
                     document.getElementById('expense-category').value = expense.category_id;
+                    
+                    // Remove hidden input if exists
+                    const hiddenInput = document.getElementById('income-category-hidden');
+                    if (hiddenInput) {
+                        hiddenInput.remove();
+                    }
                 }
                 
                 // Update form action and title
@@ -365,12 +375,12 @@
                 // Show the form for editing
                 showExpenseForm(true);
             } else {
-                alert('Error loading transaction data: ' + data.error);
+                showToast('Error loading transaction data: ' + data.error, 'error');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('An error occurred while trying to edit this transaction');
+            showToast('An error occurred while trying to edit this transaction', 'error');
         });
     }
     
@@ -663,126 +673,6 @@
         });
     }
 
-    // Initialize the expense distribution charts
-    function createExpenseChart() {
-        const ctx1 = document.getElementById('expenseChart').getContext('2d');
-        window.expenseChart = new Chart(ctx1, {
-            type: 'doughnut',
-            data: {
-                labels: [],
-                datasets: [{
-                    data: [],
-                    backgroundColor: [],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'right'
-                    },
-                    title: {
-                        display: true,
-                        text: 'Expense Distribution by Category'
-                    }
-                }
-            }
-        });
-        
-        // Add a second chart for income vs expense breakdown
-        const ctx2 = document.getElementById('incomeExpenseChart').getContext('2d');
-        window.incomeExpenseChart = new Chart(ctx2, {
-            type: 'bar',
-            data: {
-                labels: ['Income', 'Expenses', 'Net'],
-                datasets: [{
-                    data: [0, 0, 0],
-                    backgroundColor: [
-                        'rgba(75, 192, 192, 0.5)',
-                        'rgba(255, 99, 132, 0.5)',
-                        'rgba(54, 162, 235, 0.5)'
-                    ],
-                    borderColor: [
-                        'rgba(75, 192, 192, 1)',
-                        'rgba(255, 99, 132, 1)',
-                        'rgba(54, 162, 235, 1)'
-                    ],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                },
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    title: {
-                        display: true,
-                        text: 'Income vs Expenses'
-                    }
-                }
-            }
-        });
-    }
-
-    // Update the chart with new data
-    function updateExpenseChart(chartData) {
-        // Convert chart data values to 2 decimal places
-        const formattedData = chartData.data.map(value => parseFloat(value).toFixed(2));
-        
-        window.expenseChart.data.labels = chartData.labels;
-        window.expenseChart.data.datasets[0].data = formattedData;
-        window.expenseChart.data.datasets[0].backgroundColor = chartData.colors;
-        window.expenseChart.update();
-        
-        // Update the income vs expense chart
-        window.incomeExpenseChart.data.datasets[0].data = [
-            parseFloat(chartData.total_income).toFixed(2),
-            parseFloat(chartData.total_expenses).toFixed(2),
-            parseFloat(chartData.net_amount).toFixed(2)
-        ];
-        window.incomeExpenseChart.update();
-    }
-    
-    function editExpense(id) {
-        // Handle edit functionality
-        console.log('Edit expense:', id);
-        // Implement this later
-    }
-    
-    function deleteExpense(id) {
-        if (confirm('Are you sure you want to delete this expense?')) {
-            // Get CSRF token
-            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-            
-            fetch(`/delete-expense/${id}/`, {
-                method: 'POST',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRFToken': csrftoken
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Expense deleted successfully!');
-                    // Refresh dashboard
-                    const dateRange = document.getElementById('date-range').value;
-                    updateDashboard(dateRange);
-                } else {
-                    alert('Error: ' + data.error);
-                }
-            })
-            .catch(error => console.error('Error:', error));
-        }
-    }
-    
     function showReportModal() {
         const modal = document.getElementById('report-modal');
         modal.classList.add('show');
@@ -974,140 +864,5 @@
             // If continueAdding is false, the form will submit normally
         });
     });
-
-    // Dashboard Date Range Handling
-    document.addEventListener('DOMContentLoaded', function() {
-        const dateRangeSelect = document.getElementById('date-range');
-        const customDatesDiv = document.getElementById('custom-dates');
-        const startDateInput = document.getElementById('start-date');
-        const endDateInput = document.getElementById('end-date');
-        const applyRangeBtn = document.getElementById('apply-range');
-        
-        // Set default dates for custom range
-        const today = new Date();
-        const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-        
-        startDateInput.valueAsDate = firstDayOfMonth;
-        endDateInput.valueAsDate = today;
-
-        // Handle date range changes
-        dateRangeSelect.addEventListener('change', function() {
-            if (this.value === 'custom') {
-                customDatesDiv.style.display = 'inline-block';
-            } else {
-                customDatesDiv.style.display = 'none';
-                updateDashboard(this.value);
-            }
-        });
-
-        applyRangeBtn.addEventListener('click', function() {
-            updateDashboard('custom', startDateInput.value, endDateInput.value);
-        });
-
-        // Initialize dashboard with current month
-        updateDashboard('current-month');
-        
-        // Create the initial chart
-        createExpenseChart();
-    });
-
-    function updateDashboard(range, startDate, endDate) {
-        // Prepare the AJAX request data
-        const data = {
-            range: range
-        };
-        
-        if (range === 'custom') {
-            data.start_date = startDate;
-            data.end_date = endDate;
-        }
-
-        // Get CSRF token for the AJAX request
-        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-        
-        // Make AJAX request to get updated data
-        fetch('/update-dashboard/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRFToken': csrftoken
-            },
-            body: JSON.stringify(data)
-        })
-        .then(response => response.json())
-        .then(data => {
-            // Update summary cards
-            document.getElementById('income-value').textContent = parseFloat(data.total_income).toFixed(2);
-            document.getElementById('expense-value').textContent = parseFloat(data.total_expenses).toFixed(2);
-            document.getElementById('balance-value').textContent = parseFloat(data.net_amount).toFixed(2);
-            document.getElementById('transaction-count').textContent = data.total_count;
-            
-            // Apply color to net balance based on whether it's positive or negative
-            const balanceElement = document.getElementById('balance-value').parentElement;
-            if (parseFloat(data.net_amount) < 0) {
-                balanceElement.classList.add('expense-amount');
-                balanceElement.classList.remove('income-amount');
-            } else {
-                balanceElement.classList.add('income-amount');
-                balanceElement.classList.remove('expense-amount');
-            }
-            
-            // Update expense list
-            updateExpenseTable(data.expenses);
-            
-            // Update charts
-            updateExpenseChart(data.chart_data);
-            
-            // Show toast notification
-            showToast('Dashboard updated successfully', 'success');
-        })
-        .catch(error => {
-            console.error('Error updating dashboard:', error);
-            showToast('Error updating dashboard data', 'error');
-        });
-    }
-
-    function updateExpenseTable(expenses) {
-        const tableBody = document.querySelector('.expense-table tbody');
-        tableBody.innerHTML = ''; // Clear existing rows
-        
-        if (expenses.length === 0) {
-            // No expenses for the selected period
-            const row = document.createElement('tr');
-            row.innerHTML = `<td colspan="5" class="no-data">No expenses recorded for the selected period.</td>`;
-            tableBody.appendChild(row);
-            return;
-        }
-        
-        // Add rows for each expense
-        expenses.forEach(expense => {
-            const row = document.createElement('tr');
-            
-            // Set different styling for income vs expenses
-            let amountDisplay = '';
-            if (expense.transaction_type === 'income') {
-                amountDisplay = `<span class="income-amount">+£${parseFloat(expense.amount).toFixed(2)}</span>`;
-            } else {
-                amountDisplay = `<span class="expense-amount">-£${parseFloat(expense.amount).toFixed(2)}</span>`;
-            }
-            
-            row.innerHTML = `
-                <td>${expense.date}</td>
-                <td>${expense.name}</td>
-                <td>
-                    <span class="category-badge" style="background-color: ${expense.category_color}">
-                        ${expense.category_name}
-                    </span>
-                </td>
-                <td>${amountDisplay}</td>
-                <td>
-                    <button class="action-btn edit-btn" onclick="editExpense(${expense.id})">Edit</button>
-                    <button class="action-btn delete-btn" onclick="deleteExpense(${expense.id})">Delete</button>
-                </td>
-            `;
-            tableBody.appendChild(row);
-        });
-    }
 </script>
 {% endblock %}

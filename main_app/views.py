@@ -12,25 +12,21 @@ from django.contrib import messages
 from datetime import datetime, timedelta
 from calendar import monthrange
 from django.db.models import Sum  # We can use this instead of models.Sum
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_http_methods
 from django.template.loader import render_to_string
 import tempfile
 from io import BytesIO
 from django.utils import timezone
 import calendar
-# WeasyPrint is optional for PDF generation
-# If you need PDF support, install it with: pip install weasyprint
-try:
-    from weasyprint import HTML, CSS
-    WEASYPRINT_AVAILABLE = True
-except ImportError:
-    # WeasyPrint is not installed
-    WEASYPRINT_AVAILABLE = False
-    HTML = CSS = None
+
 
 # Create your views here.
-
+from .forms import CustomUserCreationForm, CustomAuthenticationForm
 def home(request):
+    # Ensure default categories exist
+    default_categories = [
+        {'name': 'Food', 'color': '#4CAF50'},
+    ]
     # Ensure default categories exist
     default_categories = [
         {'name': 'Food', 'color': '#4CAF50'},
@@ -301,55 +297,52 @@ def get_expense(request, expense_id):
         return JsonResponse({'success': False, 'error': str(e)})
 
 @login_required
+@require_http_methods(["POST"])
 def update_expense(request):
     """Update an existing expense"""
-    if request.method == 'POST':
-        try:
-            expense_id = request.POST.get('expense_id')
-            if not expense_id:
-                return JsonResponse({'success': False, 'error': 'No expense ID provided'})
+    try:
+        expense_id = request.POST.get('expense_id')
+        if not expense_id:
+            return JsonResponse({'success': False, 'error': 'No expense ID provided'})
                 
-            expense = Expense.objects.get(id=expense_id, author=request.user)
+        expense = Expense.objects.get(id=expense_id, author=request.user)
             
-            # Update fields
-            expense.name = request.POST.get('description', expense.name)
-            expense.amount = float(request.POST.get('amount', expense.amount))
-            expense.date = request.POST.get('date', expense.date)
-            expense.transaction_type = request.POST.get('transaction_type', expense.transaction_type)
+        # Update fields
+        expense.name = request.POST.get('description', expense.name)
+        expense.amount = float(request.POST.get('amount', expense.amount))
+        expense.date = request.POST.get('date', expense.date)
+        expense.transaction_type = request.POST.get('transaction_type', expense.transaction_type)
             
-            # Handle category based on transaction type
-            if expense.transaction_type == 'income':
-                category, _ = Category.objects.get_or_create(
-                    name='Income', 
-                    defaults={'color': '#4CAF50'}
-                )
-                expense.category = category
-            else:
-                category_id = request.POST.get('category')
-                if category_id and category_id.isdigit():
-                    try:
-                        category = Category.objects.get(id=int(category_id))
-                        expense.category = category
-                    except Category.DoesNotExist:
-                        # Keep existing category if invalid
-                        pass
+        # Handle category based on transaction type
+        if expense.transaction_type == 'income':
+            category, _ = Category.objects.get_or_create(
+                name='Income', 
+                defaults={'color': '#4CAF50'}
+            )
+            expense.category = category
+        else:
+            category_id = request.POST.get('category')
+            if category_id and category_id.isdigit():
+                try:
+                    category = Category.objects.get(id=int(category_id))
+                    expense.category = category
+                except Category.DoesNotExist:
+                    # Keep existing category if invalid
+                    pass
                         
-            expense.save()
+        expense.save()
             
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return JsonResponse({'success': True})
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': True})
                 
-            return redirect('home')
+        return redirect('home')
             
-        except Expense.DoesNotExist:
-            return JsonResponse({'success': False, 'error': 'Expense not found'})
-        except Exception as e:
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return JsonResponse({'success': False, 'error': str(e)})
-            return redirect('home')
-    
-    # GET requests not supported
-    return redirect('home')
+    except Expense.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Expense not found'})
+    except Exception as e:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'error': str(e)})
+        return redirect('home')
 
 def get_chart_data(user, start_date, end_date):
     """Generate chart data for expense distribution by category"""
@@ -451,11 +444,10 @@ def register(request):
 
 @login_required
 def generate_report(request):
-    """Generate a PDF or HTML report for a time period"""
+    """Generate an HTML report for a time period"""
     if request.method == 'POST':
         title = request.POST.get('title', 'Financial Report')
         period = request.POST.get('period', 'current-month')
-        report_format = request.POST.get('format', 'html')
         
         # Get the date range
         start_date, end_date = get_date_range_from_period(period, request)
@@ -508,25 +500,8 @@ def generate_report(request):
             'user': request.user,
         }
         
-        # Generate the report
-        if report_format == 'html':
-            # Return HTML report
-            return render(request, 'main_app/report.html', context)
-        elif report_format == 'pdf' and WEASYPRINT_AVAILABLE:
-            # Generate PDF using WeasyPrint
-            html_string = render_to_string('main_app/report.html', context)
-            html = HTML(string=html_string, base_url=request.build_absolute_uri())
-            
-            # Create a PDF file
-            result = html.write_pdf()
-            
-            # Create response with PDF
-            response = HttpResponse(result, content_type='application/pdf')
-            response['Content-Disposition'] = f'attachment; filename="{title.replace(" ", "_")}.pdf"'
-            return response
-        else:
-            # Fallback to HTML if PDF generation is not available
-            return render(request, 'main_app/report.html', context)
+        # Return HTML report
+        return render(request, 'main_app/report.html', context)
     
     # Redirect to home if not POST
     return redirect('home')
@@ -618,7 +593,7 @@ def budget_dashboard(request):
         except Budget.DoesNotExist:
             # No budget exists for this category
             amount = 0
-            spent = float(month_expenses.filter(category=category).aggregate(Sum('amount'))['amount__sum'] or 0)  # Use Sum instead of models.Sum
+            spent = float(month_expenses.filter(category=category).aggregate(Sum('amount'))['amount__sum'] or 0)
             remaining = -spent
             percentage = 100 if amount == 0 and spent > 0 else 0
         
@@ -706,7 +681,7 @@ def update_budget(request):
     except Exception as e:
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return JsonResponse({'success': False, 'error': str(e)})
-        
+            
         messages.error(request, f'Error updating budget: {str(e)}')
         return redirect('budget_dashboard')
 
@@ -767,3 +742,43 @@ def budget_view(request):
     """View function for the budget dashboard."""
     # Simply redirect to the budget_dashboard view
     return budget_dashboard(request)
+
+def signup_view(request):
+    if request.method == 'POST':
+        form = CustomUserCreationForm(request.POST)
+        print(f"Form data: {request.POST}")
+        print(f"Form is valid: {form.is_valid()}")
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            messages.success(request, "Account created successfully!")
+            return redirect('home')
+        else:
+            print(f"Form errors: {form.errors}")
+            messages.error(request, "Error creating account. Please check the form.")
+    else:
+        form = CustomUserCreationForm()
+    return render(request, 'main_app/signup.html', {'form': form})
+
+def login_view(request):
+    if request.method == 'POST':
+        form = CustomAuthenticationForm(data=request.POST)
+        print(f"Login form data: {request.POST}")
+        print(f"Login form is valid: {form.is_valid()}")
+        if form.is_valid():
+            username = form.cleaned_data.get('username')
+            password = form.cleaned_data.get('password')
+            user = authenticate(username=username, password=password)
+            print(f"User authenticated: {user is not None}")
+            if user is not None:
+                login(request, user)
+                messages.success(request, f"Welcome back, {username}!")
+                return redirect('home')
+            else:
+                print("Authentication failed despite valid form")
+        else:
+            print(f"Login form errors: {form.errors}")
+            messages.error(request, "Invalid username or password.")
+    else:
+        form = CustomAuthenticationForm()
+    return render(request, 'main_app/login.html', {'form': form})

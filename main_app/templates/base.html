@@ -5,10 +5,79 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}Expenses Tracker{% endblock %}</title>
-    <link rel="stylesheet" href="{% static 'main_app/css/style.css' %}">
-    <!-- ...other head elements... -->
+    <link rel="stylesheet" href="{% static 'main_app/css/style.css' %}" type="text/css">
+    {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <!-- ...existing content... -->
+    <header>
+        <nav class="navbar">
+            <div class="nav-brand">Expenses Tracker</div>
+            <ul class="nav-menu">
+                <li><a href="{% url 'home' %}">Dashboard</a></li>
+                {% if user.is_authenticated %}
+                <li><a href="{% url 'budget_dashboard' %}">Budget</a></li>
+                <li class="user-menu">
+                    <a href="#">{{ user.username }}</a>
+                    <div class="dropdown-menu">
+                        <a href="{% url 'account_logout' %}">Logout</a>
+                    </div>
+                </li>
+                {% else %}
+                <li><a href="{% url 'account_login' %}">Login</a></li>
+                <li><a href="{% url 'account_signup' %}">Sign Up</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        {% if not user.is_authenticated and request.path == "/" %}
+            <div class="welcome-container">
+                <div class="welcome-content">
+                    <h1>Welcome to Expenses Tracker</h1>
+                    <p>The simple way to track your expenses and manage your finances.</p>
+                    <div class="welcome-buttons">
+                        <a href="{% url 'account_login' %}" class="btn">Login</a>
+                        <a href="{% url 'account_signup' %}" class="btn btn-outline">Sign Up</a>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="content-container">
+                {% block content %}{% endblock %}
+            </div>
+        {% endif %}
+
+        <!-- Add message display area -->
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="message {{ message.tags }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </main>
+
+    <footer>
+        <p>&copy; {% now "Y" %} Expenses Tracker by AndisPerime. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // Auto-hide messages after 5 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            const messages = document.querySelectorAll('.message');
+            messages.forEach(function(message) {
+                setTimeout(function() {
+                    message.style.opacity = '0';
+                    setTimeout(function() {
+                        message.style.display = 'none';
+                    }, 500);
+                }, 5000);
+            });
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
 </body>
 </html>
