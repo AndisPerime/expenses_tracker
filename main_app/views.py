@@ -22,11 +22,9 @@ import calendar
 
 # Create your views here.
 from .forms import CustomUserCreationForm, CustomAuthenticationForm
+
+
 def home(request):
-    # Ensure default categories exist
-    default_categories = [
-        {'name': 'Food', 'color': '#4CAF50'},
-    ]
     # Ensure default categories exist
     default_categories = [
         {'name': 'Food', 'color': '#4CAF50'},
@@ -35,10 +33,13 @@ def home(request):
         {'name': 'Entertainment', 'color': '#9C27B0'},
         {'name': 'Other', 'color': '#FF5722'}
     ]
-    
+
     for cat in default_categories:
-        Category.objects.get_or_create(name=cat['name'], defaults={'color': cat['color']})
-    
+        Category.objects.get_or_create(
+            name=cat['name'],
+            defaults={'color': cat['color']}
+        )
+
     # For authenticated users, show their expenses only
     if request.user.is_authenticated:
         # Get current month's expenses by default

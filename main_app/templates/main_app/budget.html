@@ -93,7 +93,7 @@
                         <td>
                             <div class="progress-bar-container">
                                 <div class="progress-bar {% if item.percentage > 100 %}danger{% elif item.percentage > 80 %}warning{% else %}success{% endif %}" 
-                                     style="width: {{ item.percentage }}%">
+                                     style="width: {% if item.percentage %}{{ item.percentage }}{% else %}0{% endif %}%">
                                 </div>
                                 <span class="progress-text">{{ item.percentage }}%</span>
                             </div>
