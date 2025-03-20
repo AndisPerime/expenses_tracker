@@ -11,6 +11,13 @@
 <body>
     <header>
         <nav class="navbar">
+            <button class="mobile-menu-toggle" aria-label="Toggle navigation menu">
+                <div class="hamburger-icon">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+            </button>
             <div class="nav-brand">Expenses Tracker</div>
             <ul class="nav-menu">
                 <li><a href="{% url 'home' %}">Dashboard</a></li>
@@ -18,9 +25,7 @@
                 <li><a href="{% url 'budget_dashboard' %}">Budget</a></li>
                 <li class="user-menu">
                     <a href="#">{{ user.username }}</a>
-                    <div class="dropdown-menu">
-                        <a href="{% url 'account_logout' %}">Logout</a>
-                    </div>
+                    <a href="/logout/">Logout</a>
                 </li>
                 {% else %}
                 <li><a href="{% url 'account_login' %}">Login</a></li>
@@ -78,6 +83,21 @@
             });
         });
     </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+          const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
+          const navMenu = document.querySelector('.nav-menu');
+          const hamburgerIcon = document.querySelector('.hamburger-icon');
+          
+          if (mobileMenuToggle) {
+            mobileMenuToggle.addEventListener('click', function() {
+              navMenu.classList.toggle('active');
+              hamburgerIcon.classList.toggle('active');
+              document.body.classList.toggle('menu-open');
+            });
+          }
+        });
+      </script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

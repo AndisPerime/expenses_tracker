@@ -1314,7 +1314,1002 @@ input[type="radio"]:checked + .radio-label.income {
     gap: 15px;
 }
 
-.month-selector .btn {
-    padding: 5px 10px;
+/* Responsive Design Improvements */
+/* Extra small devices (phones, 600px and down) */
+@media only screen and (max-width: 600px) {
+  .container {
+    width: 95%;
+    padding: 15px;
+  }
+  
+  .nav-brand {
+    font-size: 1.2rem;
+  }
+  
+  .summary-cards {
+    grid-template-columns: 1fr;
+  }
+  
+  .charts-container {
+    grid-template-columns: 1fr;
+  }
+  
+  .budget-container {
+    grid-template-columns: 1fr;
+  }
+  
+  .expense-table {
     font-size: 0.9rem;
+  }
+  
+  .action-btn {
+    padding: 4px 8px;
+    font-size: 0.7rem;
+  }
+  
+  .dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+    width: 100%;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  
+  .action-buttons .btn {
+    width: 100%;
+  }
+  
+  .filter-container {
+    padding: 12px;
+  }
+  
+  .date-range-filter {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .date-inputs {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  #custom-dates {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  #custom-dates input[type="date"] {
+    width: 100%;
+  }
+  
+  .modal-content {
+    width: 95%;
+    padding: 15px;
+  }
+}
+
+/* Small devices (portrait tablets and large phones, 600px and up) */
+@media only screen and (min-width: 600px) and (max-width: 768px) {
+  .container {
+    width: 90%;
+  }
+  
+  .summary-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .charts-container {
+    grid-template-columns: 1fr;
+  }
+  
+  .budget-container {
+    grid-template-columns: 1fr;
+  }
+  
+  .dashboard-header {
+    flex-wrap: wrap;
+  }
+  
+  .action-buttons {
+    margin-top: 10px;
+  }
+}
+
+/* Medium devices (landscape tablets, 768px and up) */
+@media only screen and (min-width: 768px) and (max-width: 992px) {
+  .summary-cards {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  .charts-container {
+    grid-template-columns: 1fr;
+  }
+  
+  .budget-container {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Large devices (laptops/desktops, 992px and up) */
+@media only screen and (min-width: 992px) and (max-width: 1200px) {
+  .content-container {
+    max-width: 960px;
+  }
+}
+
+/* Extra large devices (large laptops and desktops, 1200px and up) */
+@media only screen and (min-width: 1200px) {
+  .content-container {
+    max-width: 1140px;
+  }
+}
+
+/* Navigation improvements for mobile */
+@media only screen and (max-width: 768px) {
+  .navbar {
+    padding: 0 10px;
+  }
+  
+  /* Mobile navigation menu */
+  .mobile-menu-toggle {
+    display: block;
+    cursor: pointer;
+    font-size: 1.5rem;
+    color: white;
+  }
+  
+  .nav-menu {
+    display: none;
+    position: absolute;
+    top: 60px;
+    left: 0;
+    width: 100%;
+    background-color: #333;
+    flex-direction: column;
+    z-index: 10;
+  }
+  
+  .nav-menu.active {
+    display: flex;
+  }
+  
+  .nav-menu li {
+    margin: 0;
+    width: 100%;
+    text-align: center;
+    border-bottom: 1px solid #555;
+  }
+  
+  .nav-menu a {
+    display: block;
+    padding: 15px;
+  }
+  
+  /* Dashboard layout improvements */
+  .dashboard-main {
+    padding: 10px;
+  }
+  
+  .recent-expenses, .expense-distribution, .filter-container, .chart-section {
+    padding: 15px;
+  }
+}
+
+/* Table responsive improvements */
+@media only screen and (max-width: 768px) {
+  .expense-table, .budget-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  
+  /* Card responsiveness */
+  .card {
+    padding: 12px;
+  }
+  
+  .card-header {
+    font-size: 0.9rem;
+  }
+  
+  .card-value {
+    font-size: 1.5rem;
+  }
+  
+  /* Modal responsiveness */
+  .modal-content {
+    width: 95%;
+    padding: 20px;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+  }
+  
+  .form-actions .btn {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+  
+  /* Welcome screen responsive */
+  .welcome-buttons {
+    flex-direction: column;
+  }
+  
+  .welcome-buttons .btn {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+}
+
+/* Print media query for reports */
+@media print {
+  body {
+    background-color: white;
+  }
+  
+  .navbar, footer, .action-buttons, .filter-container, .btn {
+    display: none !important;
+  }
+  
+  .content-container {
+    width: 100%;
+    max-width: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .card, .recent-expenses, .expense-distribution, .chart-section {
+    box-shadow: none;
+    border: 1px solid #ddd;
+  }
+  
+  .expense-table {
+    width: 100%;
+  }
+  
+  /* Ensure proper page breaks */
+  .card, .recent-expenses, .expense-distribution {
+    page-break-inside: avoid;
+  }
+}
+
+/* Improved accessibility for focus states */
+a:focus, button:focus, input:focus, select:focus {
+  outline: 2px solid #2196F3;
+  outline-offset: 2px;
+}
+
+/* Enhanced Mobile Responsiveness for Recent Transactions */
+@media only screen and (max-width: 768px) {
+  /* Card-based layout for transaction table on mobile */
+  .expense-table {
+    display: block;
+    border: none;
+    box-shadow: none;
+    background: transparent;
+  }
+  
+  .expense-table thead {
+    display: none; /* Hide the table headers on mobile */
+  }
+  
+  .expense-table tbody, .expense-table tr {
+    display: block;
+    width: 100%;
+  }
+  
+  .expense-table tbody tr {
+    margin-bottom: 15px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    position: relative;
+  }
+  
+  .expense-table td {
+    display: flex;
+    padding: 8px 10px;
+    text-align: right;
+    justify-content: space-between;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  
+  .expense-table td:last-child {
+    border-bottom: none;
+  }
+  
+  .expense-table td:before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: #555;
+    text-align: left;
+    padding-right: 10px;
+  }
+  
+  /* Style the action buttons in mobile view */
+  .expense-table td.actions-cell {
+    justify-content: flex-end;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+  }
+  
+  .action-btn {
+    padding: 6px 12px;
+    margin-left: 8px;
+    font-size: 0.8rem;
+  }
+  
+  /* Make the transaction type badge more visible */
+  .transaction-type-badge {
+    display: inline-block;
+    padding: 3px 6px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    margin-left: 0;
+  }
+  
+  /* Improve category badge in mobile view */
+  .category-badge {
+    padding: 3px 6px;
+    font-size: 0.7rem;
+    margin: 0;
+  }
+  
+  /* Style the date in a more compact way */
+  .date-column {
+    font-size: 0.85rem;
+  }
+  
+  /* Make amount stand out */
+  .amount-column {
+    font-weight: bold;
+  }
+}
+
+/* Tablet-specific adjustments for transaction table */
+@media only screen and (min-width: 601px) and (max-width: 992px) {
+  .expense-table th, .expense-table td {
+    padding: 10px 8px;
+    font-size: 0.9rem;
+  }
+  
+  .action-btn {
+    padding: 4px 8px;
+    font-size: 0.75rem;
+    margin-right: 3px;
+  }
+  
+  .recent-expenses {
+    padding: 15px;
+  }
+}
+
+/* Enhanced Mobile Styling for Transaction Forms */
+@media only screen and (max-width: 768px) {
+  /* Improve modal layout for transactions on mobile */
+  .modal-content.expense-modal,
+  .modal-content.income-modal {
+    padding: 20px 15px;
+    margin: 10px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  
+  /* Smaller form padding */
+  .transaction-form .form-group {
+    margin-bottom: 12px;
+  }
+  
+  /* Make sure radio buttons are easily clickable on small screens */
+  .transaction-type-selector .radio-group {
+    justify-content: center;
+    margin-bottom: 15px;
+  }
+  
+  .radio-label {
+    padding: 10px 15px;
+    width: 100px;
+    font-size: 0.95rem;
+  }
+  
+  /* Adjust date input for better mobile experience */
+  input[type="date"] {
+    font-size: 16px; /* Prevents iOS zoom on focus */
+    height: 40px; /* Larger touch target */
+  }
+  
+  /* Adjust other inputs for better touch experience */
+  .form-group input, 
+  .form-group select {
+    font-size: 16px;
+    height: 40px;
+    padding: 8px 10px;
+  }
+  
+  /* Improve the submit button */
+  .transaction-form .form-actions .btn {
+    padding: 12px 0;
+    font-size: 1rem;
+    width: 100%;
+    margin-bottom: 8px;
+  }
+
+  /* Better spacing between form sections */
+  .transaction-form h2 {
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+  }
+  
+  /* Better spacing for checkbox on small screens */
+  .checkbox-group {
+    margin: 15px 0;
+  }
+  
+  .checkbox-group input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+  }
+  
+  /* Make sure close button doesn't overlap content */
+  .close-button {
+    top: 15px;
+    right: 15px;
+    font-size: 20px;
+  }
+  
+  /* Generate transactions specific styling */
+  #generateTransactionForm {
+    padding: 5px;
+  }
+  
+  #generateTransactionForm .date-inputs {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  #generateTransactionForm .date-inputs label {
+    margin-bottom: 5px;
+    display: block;
+  }
+  
+  #generateTransactionForm .date-inputs input[type="date"] {
+    width: 100%;
+  }
+  
+  /* Make sure category or description fields don't overflow */
+  .form-group select option {
+    white-space: normal;
+    word-wrap: break-word;
+  }
+}
+
+/* Specific improvements for very small screens */
+@media only screen and (max-width: 380px) {
+  .modal-content {
+    padding: 15px 12px;
+  }
+  
+  .transaction-form h2 {
+    font-size: 1.3rem;
+  }
+  
+  .radio-label {
+    width: 80px;
+    font-size: 0.85rem;
+    padding: 8px 10px;
+  }
+  
+  .form-group label {
+    font-size: 0.9rem;
+  }
+}
+
+/* Improve modal animation on mobile */
+@media only screen and (max-width: 768px) {
+  .modal.show .modal-content {
+    animation: mobileModalIn 0.3s ease-out forwards;
+  }
+  
+  @keyframes mobileModalIn {
+    from { transform: translateY(50px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+}
+
+/* Fix iOS specific input issues */
+@supports (-webkit-touch-callout: none) {
+  /* iOS specific styles */
+  input[type="date"], 
+  input[type="text"], 
+  input[type="number"], 
+  select {
+    font-size: 16px !important; /* Prevents zoom */
+  }
+  
+  .modal-content {
+    max-height: 85vh; /* Better sizing for iOS */
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+  }
+}
+
+/* Enhanced Mobile Navigation - Updated to show on medium screens too */
+.mobile-menu-toggle {
+  display: none; /* Hide by default on all screens */
+  cursor: pointer;
+  font-size: 1.5rem;
+  color: white;
+  background: none;
+  border: none;
+  padding: 5px 10px;
+}
+
+/* Show hamburger on medium and small screens */
+@media (max-width: 992px) {
+  .mobile-menu-toggle {
+    display: block; /* Show on medium and small screens */
+  }
+  
+  .hamburger-menu {
+    display: none;
+  }
+  
+  .nav-menu {
+    display: none; /* Hide normal menu until toggled */
+  }
+  
+  /* Navbar responsive adjustments for medium screens */
+  .navbar {
+    position: relative;
+    padding: 0 15px;
+  }
+  
+  .nav-menu {
+    position: absolute;
+    top: 60px;
+    left: 0;
+    width: 100%;
+    background-color: #333;
+    flex-direction: column;
+    z-index: 100;
+    box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+  }
+  
+  .nav-menu.active {
+    display: flex;
+  }
+  
+  .nav-menu li {
+    width: 100%;
+    text-align: center;
+    margin: 0;
+    border-bottom: 1px solid #444;
+  }
+  
+  .nav-menu li:last-child {
+    border-bottom: none;
+  }
+  
+  .nav-menu a {
+    display: block;
+    padding: 15px;
+    width: 100%;
+  }
+}
+
+/* Ensure normal menu is visible only on large screens */
+@media (min-width: 993px) {
+  .nav-menu {
+    display: flex; /* Always show on larger screens */
+  }
+}
+
+/* Fix for user menu and logout button on medium and small screens */
+@media (max-width: 992px) {
+  /* Fix for user menu */
+  .user-menu {
+    position: static; /* Change to static to prevent positioning issues */
+    display: block;
+    width: 100%;
+    text-align: center;
+    padding: 10px 0;
+  }
+
+  /* Always show the username */
+  .user-menu > a {
+    display: block;
+    padding: 10px;
+    border-top: 1px solid #444;
+    width: 100%;
+  }
+  
+  /* Handle the dropdown */
+  .dropdown-menu {
+    position: static; /* Keep dropdown in flow */
+    display: block; /* Always show */
+    width: 100%;
+    box-shadow: none;
+    margin-top: 5px;
+    background-color: #444; /* Darker background to distinguish */
+  }
+  
+  .dropdown-menu a {
+    color: white; /* Better contrast */
+    padding: 12px;
+    text-align: center;
+    border-bottom: 1px solid #555;
+  }
+  
+  .dropdown-menu a:last-child {
+    border-bottom: none;
+  }
+  
+  /* Make sure dropdown is shown on hover and tap */
+  .user-menu:hover .dropdown-menu,
+  .user-menu:active .dropdown-menu,
+  .user-menu:focus .dropdown-menu {
+    display: block;
+  }
+  
+  /* Different approach for small screens - make user menu part of the nav-menu */
+  .nav-menu.active .user-menu {
+    display: block;
+    border-top: 1px solid #555;
+    margin-top: 5px;
+  }
+}
+
+/* Ensure main content doesn't overlap with the expanded menu on medium screens too */
+@media (max-width: 992px) {
+  body.menu-open main {
+    padding-top: 60px;
+  }
+}
+
+/* Enhanced Mobile Navigation */
+.mobile-menu-toggle {
+  display: none; /* Hide by default on all screens */
+  cursor: pointer;
+  font-size: 1.5rem;
+  color: white;
+  background: none;
+  border: none;
+  padding: 5px 10px;
+}
+
+/* Only show hamburger on small screens */
+@media (max-width: 768px) {
+  .mobile-menu-toggle {
+    display: block; /* Show only on mobile */
+  }
+
+  .hamburger-menu {
+    display: none;
+  }
+  
+  .nav-menu {
+    display: none; /* Hide normal menu on mobile until toggled */
+  }
+}
+
+/* Ensure normal menu is visible on larger screens */
+@media (min-width: 769px) {
+  .nav-menu {
+    display: flex; /* Always show on larger screens */
+  }
+}
+
+/* Improved hamburger menu icon */
+.hamburger-icon {
+  display: inline-block;
+  width: 25px;
+  height: 20px;
+  position: relative;
+}
+
+.hamburger-icon span {
+  display: block;
+  position: absolute;
+  height: 3px;
+  width: 100%;
+  background: white;
+  border-radius: 3px;
+  transition: all 0.3s ease;
+}
+
+.hamburger-icon span:nth-child(1) {
+  top: 0;
+}
+
+.hamburger-icon span:nth-child(2) {
+  top: 8px;
+}
+
+.hamburger-icon span:nth-child(3) {
+  top: 16px;
+}
+
+/* Animation for hamburger to X */
+.hamburger-icon.active span:nth-child(1) {
+  transform: rotate(45deg);
+  top: 8px;
+}
+
+.hamburger-icon.active span:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburger-icon.active span:nth-child(3) {
+  transform: rotate(-45deg);
+  top: 8px;
+}
+
+/* Ensure main content doesn't overlap with the expanded menu */
+@media (max-width: 768px) {
+  body.menu-open main {
+    padding-top: 60px;
+  }
+}
+
+/* Fix for user menu and logout button on mobile */
+@media (max-width: 768px) {
+  /* Keep existing mobile menu styles */
+  
+  /* Fix for user menu */
+  .user-menu {
+    position: static; /* Change to static to prevent positioning issues */
+    display: block;
+    width: 100%;
+    text-align: center;
+    padding: 10px 0;
+  }
+
+  /* Always show the username on mobile */
+  .user-menu > a {
+    display: block;
+    padding: 10px;
+    border-top: 1px solid #444;
+    width: 100%;
+  }
+  
+  /* Handle the dropdown on mobile */
+  .dropdown-menu {
+    position: static; /* Keep dropdown in flow */
+    display: block; /* Always show on mobile */
+    width: 100%;
+    box-shadow: none;
+    margin-top: 5px;
+    background-color: #444; /* Darker background to distinguish */
+  }
+  
+  .dropdown-menu a {
+    color: white; /* Better contrast */
+    padding: 12px;
+    text-align: center;
+    border-bottom: 1px solid #555;
+  }
+  
+  .dropdown-menu a:last-child {
+    border-bottom: none;
+  }
+  
+  /* Make sure dropdown is shown on hover and tap */
+  .user-menu:hover .dropdown-menu,
+  .user-menu:active .dropdown-menu,
+  .user-menu:focus .dropdown-menu {
+    display: block;
+  }
+  
+  /* Different approach for small screens - make user menu part of the nav-menu */
+  .nav-menu.active .user-menu {
+    display: block;
+    border-top: 1px solid #555;
+    margin-top: 5px;
+  }
+}
+
+/* Alternative mobile layout for user menu */
+@media (max-width: 768px) {
+  /* Add a dedicated logout/profile button for mobile */
+  .mobile-user-controls {
+    display: flex;
+    width: 100%;
+    background-color: #444;
+  }
+  
+  .mobile-user-controls a {
+    flex: 1;
+    text-align: center;
+    padding: 15px 0;
+    color: white;
+    text-decoration: none;
+    border-top: 1px solid #555;
+  }
+  
+  .mobile-user-controls a:first-child {
+    border-right: 1px solid #555;
+  }
+  
+  /* Mobile-specific logout button that's always visible */
+  .mobile-logout {
+    display: none; /* Hidden by default */
+    position: absolute;
+    right: 15px;
+    top: 15px;
+    color: white;
+    padding: 5px 10px;
+    background-color: #d32f2f;
+    border: none;
+    border-radius: 4px;
+    z-index: 150;
+    font-size: 0.8rem;
+  }
+  
+  @media (max-width: 768px) {
+    .mobile-logout {
+      display: block; /* Show on mobile */
+    }
+  }
+}
+
+/* Simplified Mobile Navigation - Clean implementation */
+.mobile-menu-toggle {
+  display: none; /* Hidden by default on all screen sizes */
+  cursor: pointer;
+  font-size: 1.5rem;
+  color: white;
+  background: none;
+  border: none;
+  padding: 5px 10px;
+}
+
+/* Clear breakpoints for navigation visibility */
+/* Large and medium screens - regular nav visible, hamburger hidden */
+@media (min-width: 769px) {
+  .nav-menu {
+    display: flex; /* Always show regular nav on larger screens */
+  }
+  
+  .mobile-menu-toggle {
+    display: none; /* Ensure hamburger is hidden */
+  }
+}
+
+/* Small screens only - hamburger visible, regular nav hidden until toggled */
+@media (max-width: 768px) {
+  .mobile-menu-toggle {
+    display: block; /* Show hamburger only on small screens */
+  }
+  
+  .nav-menu {
+    display: none; /* Hide regular nav on small screens */
+    position: absolute;
+    top: 60px;
+    left: 0;
+    width: 100%;
+    background-color: #333;
+    flex-direction: column;
+    z-index: 100;
+    box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+  }
+  
+  .nav-menu.active {
+    display: flex; /* Show when menu is active */
+  }
+  
+  .nav-menu li {
+    width: 100%;
+    text-align: center;
+    margin: 0;
+    border-bottom: 1px solid #444;
+  }
+  
+  .nav-menu li:last-child {
+    border-bottom: none;
+  }
+  
+  .nav-menu a {
+    display: block;
+    padding: 15px;
+    width: 100%;
+  }
+  
+  /* Fix for user menu on mobile */
+  .user-menu {
+    position: static;
+    display: block;
+    width: 100%;
+    text-align: center;
+    padding: 10px 0;
+  }
+
+  .dropdown-menu {
+    position: static;
+    display: block;
+    width: 100%;
+    box-shadow: none;
+    margin-top: 5px;
+    background-color: #444;
+  }
+  
+  .dropdown-menu a {
+    color: white;
+    padding: 12px;
+    text-align: center;
+    border-bottom: 1px solid #555;
+  }
+  
+  .nav-menu.active .user-menu {
+    display: block;
+    border-top: 1px solid #555;
+    margin-top: 5px;
+  }
+  
+  body.menu-open main {
+    padding-top: 60px;
+  }
+}
+
+/* Remove these conflicting media queries since we now have clear breakpoints above */
+/* 
+@media (max-width: 992px) {
+  .mobile-menu-toggle { ... }
+  .nav-menu { ... }
+  ...
+}
+
+@media (min-width: 993px) {
+  .nav-menu { ... }
+}
+*/
+
+/* Hamburger icon styles (keep these) */
+.hamburger-icon {
+  display: inline-block;
+  width: 25px;
+  height: 20px;
+  position: relative;
+}
+
+.hamburger-icon span {
+  display: block;
+  position: absolute;
+  height: 3px;
+  width: 100%;
+  background: white;
+  border-radius: 3px;
+  transition: all 0.3s ease;
+}
+
+.hamburger-icon span:nth-child(1) {
+  top: 0;
+}
+
+.hamburger-icon span:nth-child(2) {
+  top: 8px;
+}
+
+.hamburger-icon span:nth-child(3) {
+  top: 16px;
+}
+
+.hamburger-icon.active span:nth-child(1) {
+  transform: rotate(45deg);
+  top: 8px;
+}
+
+.hamburger-icon.active span:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburger-icon.active span:nth-child(3) {
+  transform: rotate(-45deg);
+  top: 8px;
 }

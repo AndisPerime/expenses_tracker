@@ -85,8 +85,8 @@
                                 {% endif %}
                             </td>
                             <td>
-                                <button class="action-btn edit-btn" onclick="editExpense({{ expense.id }})">Edit</button>
-                                <button class="action-btn delete-btn" onclick="deleteExpense({{ expense.id }})">Delete</button>
+                                <button class="action-btn edit-btn" onclick="editExpense('{{ expense.id }}')">Edit</button>
+                                <button class="action-btn delete-btn" onclick="deleteExpense('{{ expense.id }}')">Delete</button>
                             </td>
                         </tr>
                         {% empty %}
