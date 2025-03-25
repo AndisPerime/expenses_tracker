@@ -183,16 +183,20 @@ python manage.py runserver
 
 #### **HTML Validation using W3C Validation**
 
+![Screenshot 2025-03-25 142406](https://github.com/user-attachments/assets/a8e61b4b-7229-4832-b586-b3f0c5e307e5)
 
 
 #### **CSS Validation using W3C Validation**
 
-
+![css](https://github.com/user-attachments/assets/47c84fab-01e1-4fce-b985-3c39d080feba)
 
 
 #### **Lighthouse scores via Chrome Developer Tools**
 
-## Issues
+![lightscore](https://github.com/user-attachments/assets/d52c07ae-90d7-4ff9-9812-76afd84ea4c9)
+
+## Issue
+s
 Contributor mistake. 
 On project shows that there is a contributor, but there was an issue because before on VS code was worked another person forgot to check if the sign-in details were changed. 
 Noticed this issue only when pushed changes to GitHub and it showed like a contributor.
