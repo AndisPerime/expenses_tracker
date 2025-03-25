@@ -42,9 +42,9 @@
             const ctx = document.getElementById('budgetChart').getContext('2d');
             
             // Prepare data from Django template
-            const labels = [{% for item in budget_data %}'{{ item.category }}'{% if not forloop.last %},{% endif %}{% endfor %}];
-            const budgetAmounts = [{% for item in budget_data %}{{ item.budget_amount }}{% if not forloop.last %},{% endif %}{% endfor %}];
-            const actualSpending = [{% for item in budget_data %}{{ item.actual_spending }}{% if not forloop.last %},{% endif %}{% endfor %}];
+            const labels = JSON.parse(document.getElementById('labels').textContent);
+            const budgetAmounts = JSON.parse(document.getElementById('budgetAmounts').textContent);
+            const actualSpending = JSON.parse(document.getElementById('actualSpending').textContent);
             
             const budgetChart = new Chart(ctx, {
                 type: 'bar',

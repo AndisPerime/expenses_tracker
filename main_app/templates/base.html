@@ -5,12 +5,18 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}Expenses Tracker{% endblock %}</title>
-    <link rel="stylesheet" href="{% static 'main_app/css/style.css' %}" type="text/css">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}" type="text/css">
     {% block extra_css %}{% endblock %}
+    <!-- Load theme script in head to prevent FOUC (Flash of Unstyled Content) -->
+    <script src="{% static 'js/theme.js' %}"></script>
 </head>
 <body>
     <header>
         <nav class="navbar">
+            <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark/light mode">
+                <span class="moon-icon">🌙</span>
+                <span class="sun-icon">☀️</span>
+            </button>
             <button class="mobile-menu-toggle" aria-label="Toggle navigation menu">
                 <div class="hamburger-icon">
                   <span></span>
@@ -97,7 +103,75 @@
             });
           }
         });
-      </script>
+    </script>
+    <script>
+        // Check if theme switcher has been loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Wait a bit to allow other scripts to load
+            setTimeout(function() {
+                if (!window.themeSwitcherLoaded) {
+                    console.error('Theme switcher not loaded from static files, using inline fallback');
+                    
+                    // Initialize theme based on localStorage or system preference
+                    const savedTheme = localStorage.getItem('theme');
+                    const sunIcon = document.querySelector('.theme-toggle .sun-icon');
+                    const moonIcon = document.querySelector('.theme-toggle .moon-icon');
+                    
+                    function setTheme(theme) {
+                        if (theme === 'dark') {
+                            document.documentElement.classList.add('dark-mode');
+                            document.body.classList.add('dark-mode');
+                            document.documentElement.classList.remove('light-mode');
+                            document.body.classList.remove('light-mode');
+                            
+                            // Update icons
+                            if (sunIcon && moonIcon) {
+                                sunIcon.style.display = 'inline-block';
+                                moonIcon.style.display = 'none';
+                            }
+                            localStorage.setItem('theme', 'dark');
+                        } else {
+                            document.documentElement.classList.add('light-mode');
+                            document.body.classList.add('light-mode');
+                            document.documentElement.classList.remove('dark-mode');
+                            document.body.classList.remove('dark-mode');
+                            
+                            // Update icons
+                            if (sunIcon && moonIcon) {
+                                sunIcon.style.display = 'none';
+                                moonIcon.style.display = 'inline-block';
+                            }
+                            localStorage.setItem('theme', 'light');
+                        }
+                    }
+                    
+                    // Set initial theme
+                    if (savedTheme === 'dark') {
+                        setTheme('dark');
+                    } else if (savedTheme === 'light') {
+                        setTheme('light');
+                    } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                        setTheme('dark');
+                    } else {
+                        setTheme('light');
+                    }
+                    
+                    // Add click event to the theme toggle button
+                    const themeToggle = document.querySelector('.theme-toggle');
+                    if (themeToggle) {
+                        themeToggle.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            if (document.documentElement.classList.contains('dark-mode')) {
+                                setTheme('light');
+                            } else {
+                                setTheme('dark');
+                            }
+                        });
+                    }
+                }
+            }, 500); // Reduced timeout to 500ms for faster response
+        });
+    </script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>
