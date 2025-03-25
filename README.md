@@ -1,6 +1,6 @@
 ﻿# Expenses Tracker
 
-Expenses Tracker is a comprehensive Django-based web application designed to help users efficiently manage and track their personal or business expenses.
+A comprehensive web application for tracking personal expenses and managing budgets with a clean, responsive interface and theme customization options.
 
 ## Overview
 
@@ -30,31 +30,46 @@ The project board link, can find [here](https://github.com/users/AndisPerime/pro
 
 ## Features
 
-- **User Authentication**
-  - Secure registration and login system
-  - Password reset functionality
-  - User profile management
-  
-- **Expense Management**
-  - Add, edit, view, and delete expense records
-  - Bulk operations for multiple expenses
-  - Search and filter capabilities
-  
-- **Categorization**
-  - Predefined expense categories
-  - Custom category creation
-  - Category-based reporting
-  
-- **Visualization**
-  - Visual representation of spending patterns
-  - Monthly and yearly expense summaries
-  - Category distribution charts
-  
-- **Additional Features**
-  - Export expenses to CSV
-  - Responsive design for mobile and desktop
-  - Dark/light mode theme (currently not implemented)
- 
+### Core Functionality
+- **Expense Tracking**: Log and categorize daily expenses
+- **Budget Management**: Create and monitor budgets for different expense categories
+- **Dashboard**: Visual overview of spending patterns and financial status
+- **User Authentication**: Secure login and registration system
+
+### User Interface
+- **Responsive Design**: Fully functional on mobile, tablet, and desktop devices
+- **Dark/Light Mode**: Toggle between themes with persistent user preference
+- **Mobile Navigation**: Hamburger menu for enhanced mobile experience
+- **User Notifications**: Automatic message display with timed dismissal
+
+### Technical Features
+- **Django Backend**: Robust Python-based web framework
+- **User Authentication**: Built with Django allauth for secure account management
+- **Responsive Frontend**: Custom CSS with mobile-first approach
+- **Theme Persistence**: Local storage for saving user theme preferences
+- **Accessibility**: ARIA labels and semantic HTML structure
+
+## AI Contribution
+
+GitHub Copilot was used in the following aspects of development:
+
+- **Theme Toggle Functionality**: AI helped debug and enhance the dark/light mode switching system
+- **User Interface Structure**: Suggested best practices for responsive navigation
+- **Code Refactoring**: Improved theme.js implementation with better organization and fallback handling
+- **Documentation**: Assisted in generating this comprehensive README
+
+## Developer Contribution
+
+The developer (AndisPerime) was responsible for:
+
+- **Core Application Architecture**: Database design, Django models, views, and URLs
+- **Business Logic**: Budget calculation algorithms and expense tracking logic
+- **UI/UX Design**: Visual design, CSS implementation, and user experience flow
+- **Testing & Debugging**: Manual testing across devices and browsers, resolving cross-browser issues
+- **Integration**: Connecting frontend and backend components
+- **Security Implementations**: User authentication flow and data protection
+- **Performance Optimization**: Ensuring fast load times and smooth interactions
+
 ## Wireframes
 <details open>
 <summary>Wireframe - Welcome </summary>  
@@ -123,77 +138,42 @@ The project board link, can find [here](https://github.com/users/AndisPerime/pro
 
 ## Installation
 
-1. Clone the repository:
-    ```sh
-    git clone https://github.com/AndisPerime/expenses_tracker.git
-    cd expenses_tracker
-    ```
+1. Clone the repository
+```
+git clone https://github.com/AndisPerime/expenses_tracker.git
+cd expenses_tracker
+```
 
-2. Create and activate a virtual environment:
-    ```sh
-    python -m venv venv
-    source venv/bin/activate  # On Windows use `venv\Scripts\activate`
-    ```
+2. Set up a virtual environment
+```
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
 
-3. Install the dependencies:
-    ```sh
-    pip install -r requirements.txt
-    ```
+3. Install dependencies
+```
+pip install -r requirements.txt
+```
 
-4. Set up environment variables (create a .env file in the root directory):
-    ```
-    SECRET_KEY=your_secret_key
-    DEBUG=True
-    ALLOWED_HOSTS=localhost,127.0.0.1
-    ```
+4. Apply migrations
+```
+python manage.py migrate
+```
 
-5. Set up the database:
-    ```sh
-    python manage.py migrate
-    ```
+5. Run the development server
+```
+python manage.py runserver
+```
 
-6. Create a superuser:
-    ```sh
-    python manage.py createsuperuser
-    ```
+6. Access the application at http://localhost:8000
 
-7. Run the development server:
-    ```sh
-    python manage.py runserver
-    ```
+## Future Enhancements
 
-8. Open your browser and go to `http://127.0.0.1:8000/`
-
-## Usage
-
-1. **Register/Login**: Create an account or log in with your credentials
-2. **Dashboard**: View a summary of your expenses and spending patterns
-3. **Add Expense**: Click on "Add Expense" button and fill in the expense details
-4. **Categories**: Manage your expense categories from the settings section
-5. **Reports**: Generate and export expense reports for selected time periods
-
-## Deployment
-
-The application can be deployed to various platforms:
-
-### Heroku Deployment
-1. Create a Procfile in the root directory:
-   ```
-   web: gunicorn expenses_tracker.wsgi
-   ```
-2. Add the necessary packages:
-   ```sh
-   pip install gunicorn dj-database-url psycopg2-binary whitenoise
-   ```
-3. Update settings.py for production
-4. Deploy to Heroku using their CLI or GitHub integration
-
-### VPS/Dedicated Server
-1. Set up a production-ready web server (Nginx, Apache)
-2. Configure WSGI with Gunicorn
-3. Set up PostgreSQL
-4. Use Systemd for process management
-
+- Expense analytics with detailed charts and reports
+- Export functionality for financial data
+- Multi-currency support
+- Budget prediction based on spending patterns
+- Mobile app version
 
 ## Testing
   ### Testing browsers
@@ -231,3 +211,7 @@ This project is licensed under the MIT License.
 ## Contact
 
 Project Link: [https://github.com/AndisPerime/expenses_tracker](https://github.com/AndisPerime/expenses_tracker)
+
+---
+
+© 2023 Expenses Tracker by AndisPerime. All rights reserved.
