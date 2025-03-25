@@ -73,7 +73,7 @@
                             <td>{{ expense.date }}</td>
                             <td>{{ expense.name }}</td>
                             <td>
-                                <span class="category-badge" style="background-color: {{ expense.category.color|default:'#777777' }}">
+                                <span class="category-badge" style="background-color: {% if expense.category.color %}{{ expense.category.color }}{% else %}#777777{% endif %}">
                                     {{ expense.category.name }}
                                 </span>
                             </td>
@@ -129,12 +129,12 @@
                 <div class="form-group transaction-type-selector">
                     <label>Transaction Type</label>
                     <div class="radio-group">
-                        <label>
-                            <input type="radio" name="transaction_type" value="expense" checked> 
+                        <label for="transaction-type-expense">
+                            <input type="radio" id="transaction-type-expense" name="transaction_type" value="expense" checked> 
                             <span class="radio-label expense">Expense</span>
                         </label>
-                        <label>
-                            <input type="radio" name="transaction_type" value="income"> 
+                        <label for="transaction-type-income">
+                            <input type="radio" id="transaction-type-income" name="transaction_type" value="income"> 
                             <span class="radio-label income">Income</span>
                         </label>
                     </div>
@@ -186,7 +186,7 @@
                     <input type="text" id="report-title" name="title" value="Financial Report" required>
                 </div>
                 <div class="form-group">
-                    <label>Time Period</label>
+                    <label for="report-period">Time Period</label>
                     <select id="report-period" name="period" required>
                         <option value="current-month">Current Month</option>
                         <option value="last-month">Last Month</option>
@@ -197,12 +197,10 @@
                     </select>
                 </div>
                 <div id="report-custom-dates" class="form-group" style="display: none;">
-                    <label>Custom Date Range</label>
-                    <div class="date-inputs">
-                        <input type="date" id="report-start-date" name="start_date">
-                        <span>to</span>
-                        <input type="date" id="report-end-date" name="end_date">
-                    </div>
+                    <label for="report-start-date">Start Date</label>
+                    <input type="date" id="report-start-date" name="start_date">
+                    <label for="report-end-date">End Date</label>
+                    <input type="date" id="report-end-date" name="end_date">
                 </div>
                 <div class="form-group">
                     <label>Include in Report</label>

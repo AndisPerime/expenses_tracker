@@ -6,6 +6,7 @@
   --color-text-primary: #333;
   --color-text-secondary: #666;
   --color-text-muted: #777;
+  --color-text-header: #444; /* New variable for card headers with better contrast */
   
   /* UI elements */
   --color-border: #ddd;
@@ -33,9 +34,9 @@
   --color-income: #4CAF50;
   
   /* Table colors */
-  --color-table-header: #f4f4f4;
-  --color-table-border: #ddd;
-  --color-table-hover: #f9f9f9;
+  --color-table-header: #ffffff;
+  --color-table-border: #000000;
+  --color-table-hover: #ffffff;
   
   /* Card and container colors */
   --color-card-bg: #ffffff;
@@ -64,6 +65,7 @@
   --color-text-primary: #e0e0e0;
   --color-text-secondary: #b0b0b0;
   --color-text-muted: #909090;
+  --color-text-header: #d0d0d0; /* Lighter color for dark mode headers for better contrast */
   
   /* UI elements */
   --color-border: #333;
@@ -157,6 +159,22 @@
 :root:not(.dark-mode) .theme-toggle .moon-icon,
 .light-mode .theme-toggle .moon-icon {
   display: inline-block;
+}
+
+/* Move theme toggle button next to dashboard */
+.theme-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  margin-left: auto;
+  margin-right: 15px;
+}
+
+@media (max-width: 768px) {
+  .theme-toggle {
+    margin-right: 10px;
+    padding: 5px;
+  }
 }
 
 /* Apply theming to base elements */
@@ -286,7 +304,7 @@ main {
 
 .btn {
   background-color: var(--color-primary);
-  color: white;
+  color: rgb(0, 0, 0);
   padding: 10px 15px;
   border: none;
   border-radius: 4px;
@@ -354,8 +372,9 @@ main {
 
 .card-header {
   font-size: 1rem;
-  color: var(--color-text-muted);
+  color: var(--color-text-header); /* Changed from color-text-muted to improve contrast */
   margin-bottom: 10px;
+  font-weight: 500; /* Added slightly bolder font weight for better visibility */
 }
 
 .card-value {
@@ -414,7 +433,7 @@ main {
   display: inline-block;
   padding: 4px 8px;
   border-radius: 12px;
-  color: white;
+  color: rgb(0, 0, 0);
   font-size: 0.85rem;
 }
 
@@ -428,13 +447,13 @@ main {
 }
 
 .edit-btn {
-  background-color: #2196F3;
-  color: white;
+  background-color: #62abe6;
+  color: rgb(0, 0, 0);
 }
 
 .delete-btn {
   background-color: var(--color-danger);
-  color: white;
+  color: rgb(0, 0, 0);
 }
 
 .no-data {
@@ -1139,20 +1158,19 @@ input[type="radio"]:checked + .radio-label.income {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: calc(100vh - 120px);
-  background-image: linear-gradient(to bottom, var(--color-bg-primary), var(--color-bg-secondary));
+  width: 100%;
+  max-width: 480px;
   transition: var(--transition-theme);
 }
 
 .welcome-content {
-  text-align: center;
-  max-width: 600px;
-  padding: 40px;
-  background-color: var(--color-card-bg);
+  width: 100%;
+  padding: 30px;
+  background-color: var(--color-container-bg);
   border-radius: 8px;
-  box-shadow: 0 5px 20px var(--color-shadow);
-  animation: fadeIn 0.5s ease-in-out;
+  box-shadow: 0 5px 15px var(--color-shadow);
   transition: var(--transition-theme);
+  text-align: center;
 }
 
 @keyframes fadeIn {
@@ -1180,9 +1198,9 @@ input[type="radio"]:checked + .radio-label.income {
 }
 
 .btn-outline {
-  background-color: transparent;
+  background-color: var(--color-primary);
   border: 2px solid var(--color-primary);
-  color: var(--color-primary);
+  color: f00000;
 }
 
 .btn-outline:hover {
@@ -1437,7 +1455,7 @@ input[type="radio"]:checked + .radio-label.income {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-text-primary);
+  color: rgb(0, 0, 0);
   font-size: 12px;
   font-weight: 600;
 }
@@ -2464,30 +2482,4 @@ a:focus, button:focus, input:focus, select:focus {
   background: white;
   border-radius: 3px;
   transition: all 0.3s ease;
-}
-
-.hamburger-icon span:nth-child(1) {
-  top: 0;
-}
-
-.hamburger-icon span:nth-child(2) {
-  top: 8px;
-}
-
-.hamburger-icon span:nth-child(3) {
-  top: 16px;
-}
-
-.hamburger-icon.active span:nth-child(1) {
-  transform: rotate(45deg);
-  top: 8px;
-}
-
-.hamburger-icon.active span:nth-child(2) {
-  opacity: 0;
-}
-
-.hamburger-icon.active span:nth-child(3) {
-  transform: rotate(-45deg);
-  top: 8px;
 }

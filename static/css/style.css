@@ -6,6 +6,7 @@
   --color-text-primary: #333;
   --color-text-secondary: #666;
   --color-text-muted: #777;
+  --color-text-header: #444; /* New variable for card headers with better contrast */
   
   /* UI elements */
   --color-border: #ddd;
@@ -64,6 +65,7 @@
   --color-text-primary: #e0e0e0;
   --color-text-secondary: #b0b0b0;
   --color-text-muted: #909090;
+  --color-text-header: #d0d0d0; /* Lighter color for dark mode headers for better contrast */
   
   /* UI elements */
   --color-border: #333;
@@ -370,8 +372,9 @@ main {
 
 .card-header {
   font-size: 1rem;
-  color: var(--color-text-muted);
+  color: var(--color-text-header); /* Changed from color-text-muted to improve contrast */
   margin-bottom: 10px;
+  font-weight: 500; /* Added slightly bolder font weight for better visibility */
 }
 
 .card-value {
@@ -2479,30 +2482,4 @@ a:focus, button:focus, input:focus, select:focus {
   background: white;
   border-radius: 3px;
   transition: all 0.3s ease;
-}
-
-.hamburger-icon span:nth-child(1) {
-  top: 0;
-}
-
-.hamburger-icon span:nth-child(2) {
-  top: 8px;
-}
-
-.hamburger-icon span:nth-child(3) {
-  top: 16px;
-}
-
-.hamburger-icon.active span:nth-child(1) {
-  transform: rotate(45deg);
-  top: 8px;
-}
-
-.hamburger-icon.active span:nth-child(2) {
-  opacity: 0;
-}
-
-.hamburger-icon.active span:nth-child(3) {
-  transform: rotate(-45deg);
-  top: 8px;
 }

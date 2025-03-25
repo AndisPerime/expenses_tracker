@@ -1,9 +1,20 @@
 {% load static %}
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Track your expenses, manage your budget, and improve your financial health with Expenses Tracker.">
+    <meta name="keywords" content="expenses, budget, finance, money management, financial tracker">
+    <meta name="author" content="AndisPerime">
+    <!-- Accessibility meta tags -->
+    <meta name="application-name" content="Expenses Tracker">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Expenses Tracker">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="theme-color" content="#4CAF50">
     <title>{% block title %}Expenses Tracker{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'css/style.css' %}" type="text/css">
     {% block extra_css %}{% endblock %}
