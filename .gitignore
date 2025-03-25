@@ -1,2 +1,14 @@
-.venv
+core.Microsoft*
+core.mongo*
+core.python*
 env.py
+pycache/
+*.py[cod]
+.venv/
+node_modules/
+npm-debug.log
+.github/
+cloudinary_python.txt
+.flake8
+__pycache__/
+db.sqlite3

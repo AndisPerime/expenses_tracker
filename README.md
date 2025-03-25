@@ -88,7 +88,7 @@ The developer (AndisPerime) was responsible for:
 </details> 
 
 <details>
-<summary>Wireframe - Sing in </summary>  
+<summary>Wireframe - Sing In </summary>  
 
 ![sign in](https://github.com/user-attachments/assets/dc8d2a26-0164-4049-a896-5be33d800cc5)
 
@@ -195,11 +195,14 @@ python manage.py runserver
 
 ![lightscore](https://github.com/user-attachments/assets/d52c07ae-90d7-4ff9-9812-76afd84ea4c9)
 
-## Issue
-s
-Contributor mistake. 
-On project shows that there is a contributor, but there was an issue because before on VS code was worked another person forgot to check if the sign-in details were changed. 
-Noticed this issue only when pushed changes to GitHub and it showed like a contributor.
+## Issues
+
+**Contributor mistake.**
+
+Projects repository shows that there has been made a contribution by different username, but  there was an issue when another person was working on the same VScode application and the project developer forgot to check if the sign-in details into VScode were changed back to his details through terminal. 
+Noticed this issue only when pushed changes to GitHub and it showed up like a different contributor, but looking into contributors tab, there was never a contributor added. Project author was the one making those changes, not being aware of different 'user.name'.
+
+
 <details>
 <summary>Issue Evidence </summary>  
    
@@ -213,6 +216,12 @@ Noticed this issue only when pushed changes to GitHub and it showed like a contr
 
 </details> 
 
+
+**App issues**
+
+1. Page for printing budget report does not have a dark mode.
+2. On budget dashboard page, option to change months does not work, only current month is available to view.
+3. Sign-up and login both have 2 different working versions of pages.
 
 
 ## Contributing

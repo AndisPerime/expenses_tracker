@@ -7,7 +7,6 @@
     <meta name="description" content="Track your expenses, manage your budget, and improve your financial health with Expenses Tracker.">
     <meta name="keywords" content="expenses, budget, finance, money management, financial tracker">
     <meta name="author" content="AndisPerime">
-    <!-- Accessibility meta tags -->
     <meta name="application-name" content="Expenses Tracker">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -18,7 +17,6 @@
     <title>{% block title %}Expenses Tracker{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'css/style.css' %}" type="text/css">
     {% block extra_css %}{% endblock %}
-    <!-- Load theme script in head to prevent FOUC (Flash of Unstyled Content) -->
     <script src="{% static 'js/theme.js' %}"></script>
 </head>
 <body>
