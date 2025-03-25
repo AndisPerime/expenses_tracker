@@ -1200,7 +1200,7 @@ input[type="radio"]:checked + .radio-label.income {
 .btn-outline {
   background-color: var(--color-primary);
   border: 2px solid var(--color-primary);
-  color: f00000;
+  color: white;
 }
 
 .btn-outline:hover {
