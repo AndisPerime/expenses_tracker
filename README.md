@@ -192,6 +192,23 @@ python manage.py runserver
 
 #### **Lighthouse scores via Chrome Developer Tools**
 
+## Issues
+Contributor mistake. 
+On project shows that there is a contributor, but there was an issue because before on VS code was worked another person forgot to check if the sign-in details were changed. 
+Noticed this issue only when pushed changes to GitHub and it showed like a contributor.
+<details>
+<summary>Issue Evidence </summary>  
+   
+![1](https://github.com/user-attachments/assets/785f6ceb-3f9f-489a-83d0-e70c5eaee450)
+
+![2](https://github.com/user-attachments/assets/a44e3a8a-27b4-4c5c-867d-79d8233b9b7a)
+
+![3](https://github.com/user-attachments/assets/99d5dceb-f940-4468-9f14-a598faa7aebd)
+
+![4](https://github.com/user-attachments/assets/04749c3b-699f-45e4-8ed2-6650838c3689)
+
+</details> 
+
 
 
 ## Contributing
